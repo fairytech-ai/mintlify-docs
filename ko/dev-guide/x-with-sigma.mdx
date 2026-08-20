@@ -1,0 +1,165 @@
+---
+title: "X + Sigma 함께 쓰기"
+description: "구성 조합별 SDK 호출 순서"
+---
+
+X와 Sigma를 함께, 혹은 단독으로 사용할 때의 대표 구성 4가지와 각 구성의 전체 호출 순서를 정리합니다.
+
+| # | 구성 | 설명 |
+| :-- | :-- | :-- |
+| 1 | X (동의 화면 제공형) | 법적 동의를 페어리 UI로 수집 |
+| 2 | X (동의 화면 제공형 \+ 동의 연동 API) \+ Sigma | 앱 자체 플로우에서도 동의를 받아 반영하고, Sigma도 함께 사용 |
+| 3 | X (동의 자체 관리형) \+ Sigma | 동의는 고객사가 관리하고 start/stop만 호출, Sigma도 함께 사용 |
+| 4 | Sigma | 모수 타겟팅만 사용 |
+
+<Note>
+  용어 정의는 [제품 개요 \> 핵심 용어](/ko/dev-guide/getting-started/overview#핵심-용어)를, 구성 선택은 [내 연동 구성 찾기](/ko/dev-guide/getting-started/find-your-setup)를 참고하세요.
+</Note>
+
+## 1. 동의 화면 제공형 (X 단독)
+
+```mermaid
+sequenceDiagram
+    participant Host as 고객사 앱
+    participant SDK
+    participant Server as 페어리 서버
+    Note over Host: 앱 진입 (Application.onCreate)
+    Host->>SDK: init(config, callback)
+    SDK->>SDK: 기본 초기화
+    opt 인식 서비스가 비정상 종료됐던 경우
+        SDK->>Server: 서비스 구동 데이터 fetch
+        SDK->>SDK: 인식 서비스 자동 재시작
+    end
+    Note over Host: 고객사 앱 로그인
+    Host-->>SDK: (호출 없음)
+    Note over Host: 페어리 UI 진입
+    Host->>SDK: setUserId(userId, callback)
+    Host->>SDK: launchUI(config, redirectTo, callback)
+    SDK->>Server: 웹뷰 로드 (동의/서비스 처리)
+    SDK-->>Host: onFinishCallback()
+    Note over Host: 고객사 앱 로그아웃
+    alt 인식 서비스를 유지하는 경우
+        Host-->>SDK: (호출 없음)
+    else 인식 서비스를 종료하는 경우
+        Host->>SDK: wipeData() + stop()
+    end
+    Note over Host: 탈퇴
+    Host->>SDK: withdrawUserConsentAndStop()
+    SDK->>Server: 동의 철회
+    SDK->>SDK: 인식 서비스 종료
+```
+
+자세한 연동 방법은 [동의 화면으로 연동하기 (launchUI)](/ko/dev-guide/x/launch-ui)를 참고하세요.
+
+## 2. 동의 화면 제공형 \+ 동의 연동 API \+ Sigma
+
+```mermaid
+sequenceDiagram
+    participant Host as 고객사 앱
+    participant SDK
+    participant Server as 페어리 서버
+    Note over Host: 앱 진입 (Application.onCreate)
+    Host->>SDK: init(config, callback)
+    SDK->>SDK: 기본 초기화 + Sigma 구동 준비
+    SDK->>Server: 서비스 구동 데이터 fetch
+    opt 인식 서비스가 비정상 종료됐던 경우
+        SDK->>SDK: 인식 서비스 자동 재시작
+    end
+    Note over Host: 사용자 로그인
+    opt
+        Host->>SDK: setMarketingPushEnabled()
+        SDK->>Server: 값 변경 시에만 업로드
+    end
+    Note over Host: 고객사 앱 메인 화면 진입
+    opt
+        Host->>SDK: setMarketingPushEnabled()
+        SDK->>Server: 값 변경 시에만 업로드
+    end
+    Note over Host: 고객사 앱 내 동의 flow (가입 등)
+    Host->>SDK: setUserId(userId, callback)
+    SDK-->>Host: onSuccess
+    Host->>SDK: getConsent(callback)
+    SDK->>Server: 사용자 동의 상태 조회
+    Server-->>SDK: UserConsent
+    SDK-->>Host: onSuccess(UserConsent)
+    Host->>SDK: setConsent(userConsent, callback)
+    SDK->>Server: 동의 upsert
+    Server-->>SDK: 저장된 최종 동의
+    SDK-->>Host: onSuccess(UserConsent)
+    Note over Host: 페어리 UI 진입 (페어리 UI 경로도 그대로 사용 가능)
+    Host->>SDK: setUserId(userId, callback)
+    Host->>SDK: launchUI(config, redirectTo, callback)
+    SDK->>Server: 웹뷰 로드 (동의/서비스 처리)
+    SDK-->>Host: onFinishCallback()
+    Note over Host: 고객사 앱 로그아웃
+    alt 인식 서비스를 유지하는 경우
+        Host-->>SDK: (호출 없음)
+    else 인식 서비스를 종료하는 경우
+        Host->>SDK: wipeData() + stop()
+    end
+    Note over Host: 탈퇴
+    Host->>SDK: withdrawUserConsentAndStop()
+    SDK->>Server: 동의 철회
+    SDK->>SDK: 인식 서비스 종료
+```
+
+자세한 연동 방법은 [동의 연동 API](/ko/dev-guide/x/consent-api)와 [Sigma 연동하기](/ko/dev-guide/sigma-targeting/setup)를 참고하세요.
+
+## 3. 동의 자체 관리형 \+ Sigma
+
+```mermaid
+sequenceDiagram
+    participant Host as 고객사 앱
+    participant SDK
+    participant Server as 페어리 서버
+    Note over Host: 앱 진입 (Application.onCreate)
+    Host->>SDK: init(config, callback)
+    SDK->>SDK: 기본 초기화 + Sigma 구동 준비
+    SDK->>Server: 서비스 구동 데이터 fetch
+    opt 인식 서비스가 비정상 종료됐던 경우
+        SDK->>SDK: 인식 서비스 자동 재시작
+    end
+    Note over Host: 사용자 로그인
+    opt
+        Host->>SDK: setMarketingPushEnabled()
+        SDK->>Server: 값 변경 시에만 업로드
+    end
+    Note over Host: 고객사 앱 메인 화면 진입
+    opt
+        Host->>SDK: setMarketingPushEnabled()
+        SDK->>Server: 값 변경 시에만 업로드
+    end
+    Note over Host: X 인식 서비스 시작
+    opt 계약상 사용자 식별자를 전달하는 경우만
+        Host->>SDK: setUserId(userId, callback)
+    end
+    Host->>SDK: start(config, callback)
+    Note over Host: 고객사 앱 로그아웃
+    alt 인식 서비스를 유지하는 경우
+        Host-->>SDK: (호출 없음)
+    else 인식 서비스를 종료하는 경우
+        Host->>SDK: wipeData() + stop()
+    end
+    Note over Host: 사용자 탈퇴
+    Host->>SDK: wipeData() + stop()
+```
+
+자세한 연동 방법은 [직접 연동하기 (start / stop)](/ko/dev-guide/x/direct)와 [Sigma 연동하기](/ko/dev-guide/sigma-targeting/setup)를 참고하세요.
+
+## 4. Sigma 단독
+
+```mermaid
+sequenceDiagram
+    participant Host as 고객사 앱
+    participant SDK
+    participant Server as 페어리 서버
+    Note over Host: 앱 진입 (Application.onCreate)
+    Host->>SDK: init(config, callback)
+    SDK->>SDK: 기본 초기화 + Sigma 구동 준비
+    SDK->>Server: 서비스 구동 데이터 fetch
+    Note over Host: 마케팅 푸시 수신 가능 여부 확인 시점
+    Host->>SDK: setMarketingPushEnabled()
+    SDK->>Server: 값 변경 시에만 업로드
+```
+
+자세한 연동 방법은 [Sigma 연동하기](/ko/dev-guide/sigma-targeting/setup)를 참고하세요.

@@ -1,0 +1,26 @@
+---
+title: "캐시백 웹내 특정페이지로 바로가기"
+---
+
+만약 캐시백 메인 페이지가 아닌 **특정 페이지를 바로 띄우고 싶다면** 아래 내용을 참고하여 특정 페이지를 바로 띄울 수 있습니다.
+
+- redirectTo를 설정합니다.
+  - `CashbackViewController`
+- redirectTo: 캐시백 웹 내에서 리다이렉트 될 페이지의 경로이며 아래와 같은 페이지들을 지원합니다.
+  | 페이지 | redirectTo |
+  | :-- | :-- |
+  | 메인 페이지의 특정 카테고리 | `/cashback?category=뷰티` |
+  | 캐시백 프로그램 | `/cashback/detail?business_id=11st` |
+  | 사용자 실적 내역 | `/cashback/transactions` |
+  | 설정 | `/settings` |
+  | CS 문의 접수 | `/cs` |
+
+```swift
+val redirectURL = "/cashback/transactions"
+
+let vc = CashbackViewController()
+vc.delegate = self
+vc.redirectTo = redirectURL
+vc.modalPresentationStyle = .fullScreen
+present(vc, animated: true)
+```

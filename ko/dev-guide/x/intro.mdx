@@ -1,0 +1,53 @@
+---
+title: "제품 소개"
+description: "Moment SDK을 활용한 X 실시간 타겟팅 소개"
+---
+
+## Moment X
+
+**Moment X**은 사용자의 앱 사용 맥락(Moment)을 실시간으로 감지하여, 가장 적절한 순간에 광고/메시지를 노출할 수 있도록 도와주는 솔루션입니다. 현재 안드로이드만 지원합니다.
+
+## 주요 특징
+
+- On-device 기술를 기반으로 디바이스 내부에서 동작합니다.
+- 앱 사용, 상황적 맥락 등을 인식하여 절제의 순간에 메시지를 노출합니다.
+- 최소한의 배터리 소모와 앱 용량 증가로 설계되어 있습니다.
+
+## 개요
+
+Moment SDK는 사용자 앱 사용 맥락을 탐지하기 위해 아래 두 가지 권한이 필요합니다.
+
+- **앱 사용 정보 접근 (**`PACKAGE_USAGE_STATS`**)** — 사용자가 설정 화면에서 직접 허용해야 하는 특수 권한입니다.
+- **알림 권한 (**`POST_NOTIFICATIONS`**)** — Android 13(API 33) 이상에서는 런타임으로 요청해야 합니다.
+
+## 동작 방식 (택1)
+
+계약 단계에서 선택됩니다.
+
+<CardGroup cols={2}>
+  <Card title="Standard (알림제공)" icon="bullseye">
+    사용자의 앱 사용을 분석하여 **적재적소**에 맞춤 메시지를 전달합니다. 콘솔과 함께 이용합니다.
+  </Card>
+
+  <Card title="Trigger" icon="bolt">
+    특정 앱 사용/행동이 트리거를 일으키면 즉시 broadcast만 전달합니다.
+  </Card>
+</CardGroup>
+
+## 연동 방식 (택1)
+
+서비스 이용에 필요한 법적 동의를 누가 관리하는지에 따라 연동 방식이 나뉘며, 계약 및 기획 단계에서 선택됩니다.
+
+<CardGroup cols={2}>
+  <Card title="동의 화면 제공형 (ConsentUI)" icon="sparkles" href="/ko/dev-guide/x/launch-ui">
+    법적 동의를 페어리가 관리하고, 페어리가 제공하는 동의 화면(`launchUI`)으로 수집합니다. `user_id` 설정이 필요합니다.
+  </Card>
+
+  <Card title="동의 자체 관리형 (ConsentNone)" icon="toggle-on" href="/ko/dev-guide/x/direct">
+    법적 동의를 고객사가 자체 관리하고, SDK는 인식 서비스의 `start` / `stop` 만 호출합니다. `user_id` 가 필요 없습니다.
+  </Card>
+</CardGroup>
+
+<Tip>
+  어떤 방식이 우리 서비스에 맞는지 모르겠다면 [내 연동 구성 찾기](/ko/dev-guide/getting-started/find-your-setup)를 확인하세요.
+</Tip>

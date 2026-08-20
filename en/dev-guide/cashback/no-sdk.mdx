@@ -1,0 +1,201 @@
+---
+title: "(No-SDK) Swift Integration"
+---
+
+## Quickstarter
+
+See the example code in the repository below.
+
+<Card title="iOS Cashback Web starter" icon="sparkles" href="https://github.com/fairytech-external/ios-cashback-web-starter">
+</Card>
+
+To actually run the sample, register the app's bundle ID in your project.
+
+## Prerequisites
+
+<Warning>
+  Complete [Getting Started \> iOS Setup](/en/dev-guide/getting-started/ios-setup) first.
+</Warning>
+
+## Step-by-step guide
+
+### 1. Cashback Web endpoint and query parameters
+
+**Base URL**
+
+- `https://cashback-ui.moment.fairytech.ai/main`
+
+**Supported query parameters**
+
+`redirect_to`: A path Cashback Web will redirect to internally. Supported pages:
+
+<Tip>
+  You must URL-encode the paths below before passing them as query parameters.
+</Tip>
+
+| Page | Path | Full URL |
+| :-- | :-- | :-- |
+| Main page | `/cashback?category=beauty` | `https://cashback-ui.moment.fairytech.ai/main?redirect_to=%2Fcashback%3Fcategory%3D%EB%B7%B0%ED%8B%B0` |
+| Cashback program | `/cashback/detail?business_id=11st` | `https://cashback-ui.moment.fairytech.ai/main?redirect_to=%2Fcashback%2Fdetail%3Fbusiness_id%3D11st` |
+| User earnings history | `/cashback/transactions` | `https://cashback-ui.moment.fairytech.ai/main?redirect_to=%2Fcashback%2Ftransactions` |
+| Settings | `/settings` | `https://cashback-ui.moment.fairytech.ai/main?redirect_to=%2Fsettings` |
+| CS inquiry | `/cs` | `https://cashback-ui.moment.fairytech.ai/main?redirect_to=%2Fcs` |
+
+<Info>
+  If you need the supported `business_id` list, contact `eng@fairytech.ai`.
+</Info>
+
+### 2. Configure the WebView
+
+Required setup to load Cashback Web safely and enable native–web communication.
+
+#### 1) Basic configuration
+
+```swift
+struct CashbackWebView: UIViewRepresentable {
+	...
+	func makeUIView(context: Context) -> WKWebView {
+		let config = WKWebViewConfiguration()
+		let preferences = WKPreferences()
+		
+		// 1) Allow JS popups / new windows
+    preferences.javaScriptCanOpenWindowsAutomatically = true
+    config.preferences = preferences
+    
+    // 2) Allow JS execution on the page
+    config.defaultWebpagePreferences.allowsContentJavaScript = true
+    
+    // 3) Enable DOM storage (localStorage / sessionStorage)
+    // WKWebView enables it by default, but behavior varies by WebKit version, so set explicitly.
+    config.websiteDataStore = .default()
+    
+    // 4) Allow cookie sharing
+    // On iOS 14+, .default() automatically manages cookies.
+    // If you need to support iOS 13 or below, sync cookies manually.
+    let webView = WKWebView(frame: .zero, configuration: config)
+    let cookieStore = webView.configuration.websiteDataStore.httpCookieStore
+    // (Example) Load saved cookies
+    HTTPCookieStorage.shared.cookies?.forEach { cookie in
+        cookieStore.setCookie(cookie)
+    }
+        
+		let webView = WKWebView(frame: .zero, configuration: config)
+		context.coordinator.webView = webView
+		context.coordinator.load(redirectTo: redirectTo)
+		webView.uiDelegate = context.coordinator
+    
+    return webView
+	}
+}
+```
+
+#### 2) Handle external links
+
+```swift
+struct CashbackWebView: UIViewRepresentable {
+	...
+	class Coordinator: NSObject, WKScriptMessageHandler, WKUIDelegate {
+		func webView(_ webView: WKWebView,
+								 createWebViewWith configuration: WKWebViewConfiguration,
+	               for navigationAction: WKNavigationAction,
+	               windowFeatures: WKWindowFeatures) -> WKWebView? {
+			guard let url = navigationAction.request.url else { return nil }
+	
+			if let host = url.host, host.contains(FAIRY_CASHBACK_DOMAIN) {
+				// Cashback-domain internal requests: handle inside the WebView
+				return nil
+			} else {
+				// Otherwise, open external links in the default browser
+				UIApplication.shared.open(url)
+				return nil
+			}
+		}
+	}
+}
+```
+
+- 🤔 Why treat external links separately?
+  - Your app might contain other external links (ads, partner pages, etc.).
+  - Opening external links directly in the WebView risks sharing JS/cookies with unwanted domains or exposes users to phishing.
+  - So render **only our domain** in the WebView and always open other links in the system browser to keep the domain boundary explicit.
+
+### 3. Implement the JavaScript Interface (`fairyCashbackBridge`)
+
+You **must** implement the following two bridge APIs.
+
+```swift
+struct CashbackWebView: UIViewRepresentable {
+	...
+	func makeUIView(context: Context) -> WKWebView {
+		let config = WKWebViewConfiguration()
+		let controller = WKUserContentController()
+		...
+
+		// JS bridge: window.fairyCashbackBridge.finish() / reload(redirectTo)
+		let js = """
+			window.fairyCashbackBridge = {
+				finish: function() {
+					window.webkit.messageHandlers.finish.postMessage({});
+				},
+				reload: function(redirectTo) {
+					window.webkit.messageHandlers.reload.postMessage({redirectTo: redirectTo});
+				}
+			};
+		"""
+		controller.addUserScript(WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false))
+		controller.add(context.coordinator, name: "finish")
+		controller.add(context.coordinator, name: "reload")
+
+		config.userContentController = controller
+		...
+        
+		return webView
+	}
+	
+	class Coordinator: NSObject, WKScriptMessageHandler, WKUIDelegate {
+		...
+		func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+			if message.name == "finish" {
+				onFinish()
+			} else if message.name == "reload" {
+				let redirectTo = (message.body as? [String: Any])?["redirectTo"] as? String
+				load(redirectTo: redirectTo)
+			}
+		}
+		
+		func load(redirectTo: String? = nil) {
+			var components = URLComponents()
+			components.scheme = "https"
+			components.host   = FAIRY_CASHBACK_DOMAIN
+			components.path   = FAIRY_CASHBACK_PATH
+
+			if let redirectTo = redirectTo {
+				components.queryItems = [
+					URLQueryItem(name: "redirect_to", value: redirectTo)
+				]
+			}
+
+			guard let finalUrl = components.url else { return }
+			var request = URLRequest(url: finalUrl)
+            
+			request.setValue(userId, forHTTPHeaderField: "x-moment-user-id")
+			request.setValue(projectId, forHTTPHeaderField: "x-moment-project-id")
+			request.setValue(apiKey, forHTTPHeaderField: "x-moment-web-api-key")
+			request.setValue("IOS", forHTTPHeaderField: "x-moment-platform")
+
+			webView?.load(request)
+		}
+	}
+}
+```
+
+### 4. Load the Cashback Web URL in the WebView
+
+When opening the page with `webView.load(request)`, you **must** add the following four headers.
+
+| Header | Description |
+| :-- | :-- |
+| x-moment-project-id | Project ID (issued by Fairy) |
+| x-moment-web-api-key | Web API Key (issued by Fairy) |
+| x-moment-user-id | Cashback user identifier |
+| x-moment-platform | IOS (calling platform) |

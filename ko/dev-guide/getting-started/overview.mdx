@@ -1,0 +1,95 @@
+---
+title: "제품 개요"
+description: "Moment SDK 제품 구성과 핵심 용어"
+---
+
+**Moment SDK**는 사용자의 앱 사용 맥락(Moment)을 실시간으로 감지해 가장 적절한 순간에 메시지를 노출하고, 관심사 기반 모수 타겟팅과 결제 데이터 기반 캐시백까지 지원하는 SDK입니다.
+
+## 제품 구성
+
+<CardGroup cols={3}>
+  <Card title="실시간 타겟팅 (X)" icon="bullseye" href="/ko/dev-guide/x/intro">
+    타앱 사용 맥락을 감지해 적시에 메시지를 노출합니다.
+  </Card>
+
+  <Card title="모수 타겟팅 (Sigma)" icon="chart-pie" href="/ko/dev-guide/sigma-targeting/product-intro">
+    관심사 기반으로 사용자를 분류해 모수 타겟팅에 활용합니다.
+  </Card>
+
+  <Card title="Cashback" icon="coins" href="/ko/dev-guide/cashback/product-intro">
+    결제 실적을 자동 집계하여 리워드 프로그램을 운영합니다.
+  </Card>
+</CardGroup>
+
+### 실시간 타겟팅 (X)
+
+- 사용자의 타앱 사용 맥락을 on-device로 인식해, 가장 적절한 순간에 알림을 노출합니다.
+- **동의(Consent) 개념이 존재하며**, 동의 관리 주체에 따라 연동 방식이 두 가지로 나뉩니다. 아래 [핵심 용어](#핵심-용어)를 참고하세요.
+
+### 모수 타겟팅 (Sigma)
+
+- 관심사/행동 기반으로 사용자를 분류해 모수 타겟팅 캠페인에 활용합니다.
+- 동의 개념이 없습니다. 호스트 앱이 보유한 **마케팅 푸시 수신 가능 여부**만 `setMarketingPushEnabled` 로 전달합니다.
+- `user_id` 가 필요 없습니다.
+
+### Cashback
+
+- 결제 실적을 자동 집계해 캐시백 리워드 프로그램을 운영합니다.
+- **X의 동의 화면 제공형 연동과 `user_id` 설정을 전제**로 동작합니다.
+
+## 핵심 용어
+
+X 연동 방식을 가리키는 용어입니다. 문서 전반에서 아래 명칭을 사용합니다.
+
+| 용어 | 내부 용어 | 설명 |
+| :-- | :-- | :-- |
+| **동의 화면 제공형** | ConsentUI | 서비스 이용에 필요한 법적 동의를 **페어리가 관리**하고, 페어리가 제공하는 동의 화면(`launchUI`)으로 수집합니다. `user_id` 설정이 필요합니다. |
+| **동의 자체 관리형** | ConsentNone | 법적 동의를 **고객사가 자체 관리**하고, SDK는 인식 서비스의 `start` / `stop` 만 호출합니다. `user_id` 가 필요 없습니다. |
+| **동의 연동 API** | ConsentAPI | 동의 화면 제공형 고객사가 **자체 가입/설정 플로우에서 받은 동의를 API로 반영**할 수 있게 추가로 제공하는 옵션입니다. (`getConsent` / `setConsent`) |
+
+<Tip>
+  어떤 구성이 우리 서비스에 맞는지 모르겠다면 [내 연동 구성 찾기](/ko/dev-guide/getting-started/find-your-setup)에서 결정 트리를 따라가 보세요.
+</Tip>
+
+## SDK 지원 환경
+
+### Android
+
+- **Kotlin**: 1.9.10 이상
+- **Java**: 8 이상 — SDK는 Java 8 문법과 API를 기준으로 작성되어 있습니다.
+- **minSdk**: 23 — Android 6.0 (Marshmallow) 이상에서 SDK가 동작합니다.
+- **compileSdk**: 35, **targetSdk**: 35 — Android 15(API 35) 기준으로 빌드 및 테스트 되었습니다.
+
+#### Performance
+
+페어리 SDK는 일상적인 사용 시 성능과 배터리 영향도를 최소화하도록 설계되어 있습니다.
+
+**🔋 배터리 사용량**
+
+- **일반적 사용 (1일동안 평소처럼 이용)**
+  - SDK 미사용: 0% / SDK 사용: 0.3%
+- **Stress 테스트 (1시간, 5초마다 타겟 앱 자동 진입)**
+  - SDK 미사용: 100% → 91% (9%)
+  - SDK 사용: 100% → 88% (12%)
+
+**📦 SDK 사이즈**
+
+- SDK 파일 크기는 약 **2MB**입니다.
+- SDK import 후 앱 사이즈 증가분은 앱마다 차이가 있을 수 있습니다.
+
+### iOS
+
+- **Swift: 5 이상** — Swift Compiler 5에서 개발되었으며, 해당 버전에서 안정성을 보장합니다.
+- **Minimum Deployments: iOS 14.0 이상** — iOS 14 이상에서 SDK가 동작합니다.
+
+## 다음 단계
+
+<CardGroup cols={2}>
+  <Card title="내 연동 구성 찾기" icon="map" href="/ko/dev-guide/getting-started/find-your-setup">
+    두세 가지 질문에 답하면 우리 서비스에 맞는 연동 구성이 정해집니다.
+  </Card>
+
+  <Card title="Android Setup" icon="screwdriver-wrench" href="/ko/dev-guide/getting-started/setup">
+    SDK 설치와 기본 설정을 진행합니다.
+  </Card>
+</CardGroup>

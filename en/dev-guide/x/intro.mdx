@@ -1,0 +1,53 @@
+---
+title: "Product Introduction"
+description: "Introduction to X real-time targeting powered by the Moment SDK"
+---
+
+## Moment X
+
+**Moment X** detects the user's app-usage context (Moment) in real time so you can deliver ads/messages at the most appropriate moment. It currently supports Android only.
+
+## Highlights
+
+- Built on on-device technology; everything runs inside the device.
+- Recognizes app usage and contextual signals to deliver messages at a considerate moment.
+- Designed for minimal battery and app-size impact.
+
+## Overview
+
+The Moment SDK requires two permissions to detect user app-usage context.
+
+- **App usage access (**`PACKAGE_USAGE_STATS`**)** — A special permission the user must grant directly in system settings.
+- **Notification permission (**`POST_NOTIFICATIONS`**)** — Must be requested at runtime on Android 13 (API 33) or above.
+
+## Operating modes (choose one)
+
+Selected at the contract stage.
+
+<CardGroup cols={2}>
+  <Card title="Standard (with notifications)" icon="bullseye">
+    Analyzes app usage and delivers **timely** custom messages. Used together with the console.
+  </Card>
+
+  <Card title="Trigger" icon="bolt">
+    Fires an immediate broadcast the moment a specific app usage/behavior triggers.
+  </Card>
+</CardGroup>
+
+## Integration modes (choose one)
+
+The integration mode depends on who manages the legal consent required to use the service, and is selected at the contract and planning stage.
+
+<CardGroup cols={2}>
+  <Card title="Consent-UI mode (ConsentUI)" icon="sparkles" href="/en/dev-guide/x/launch-ui">
+    Fairy manages legal consent and collects it through Fairy's consent screen (`launchUI`). Requires a `user_id`.
+  </Card>
+
+  <Card title="Self-managed consent mode (ConsentNone)" icon="toggle-on" href="/en/dev-guide/x/direct">
+    You manage legal consent yourself; the SDK only exposes `start` / `stop` for the recognition service. No `user_id` required.
+  </Card>
+</CardGroup>
+
+<Tip>
+  Not sure which mode fits your service? Check [Find Your Integration Setup](/en/dev-guide/getting-started/find-your-setup).
+</Tip>

@@ -1,0 +1,97 @@
+---
+title: "보정내역 조회  API"
+---
+
+확정 실적 외에 별도로 지급된 보정 금액을 사용자별로 조회하는 API입니다.
+
+정산 시 확정 실적 조회 API(V2)의 `confirmedAmount`에 더해, 본 API에서 조회한 `adjustmentAmount`를 반영하여 최종 정산 금액을 산출할 수 있습니다.
+
+\[GET\] [https://api.public.moment.fairytech.ai/organization](https://api.public.moment.fairytech.ai/organization/`:organizationPublicId`/adjustments)`:organizationPublicId`[/adjustments](https://api.public.moment.fairytech.ai/organization/`:organizationPublicId`/adjustments)
+
+### 요청 헤더
+
+| 헤더명 | 필수여부 | 설명 |
+| :-- | :-- | :-- |
+| x-moment-api-key | O | API 서버 인증키 |
+
+### 요청 경로 파라미터
+
+| 파라미터 | 타입 | 설명 | 필수여부 | 기본값 |
+| :-- | :-- | :-- | :-- | :-- |
+| organizationPublicId | string | 고객사 ID | O | - |
+
+### 요청 쿼리스트링
+
+| 파라미터 | 타입 | 설명 | 필수여부 | 기본값 |
+| :-- | :-- | :-- | :-- | :-- |
+| year | number | 조회할 연도 (YYYY) | O | - |
+| month | number | 조회할 월 (1-12) | O | - |
+| page | number | 페이지 번호 | X | 1 |
+| limit | number | 페이지당 데이터 수 (1~100) | X | 100 |
+| user\_id | string | 조회할 단일 사용자 ID | X | - |
+
+`user_id` 값을 전달하면 해당 사용자에 대한 보정 내역만 조회합니다.
+
+### 요청 예시
+
+```json
+GET <https://api.public.moment.fairytech.ai/organization/fairy/adjustments?year=2025&month=3&page=1&limit=20>
+```
+
+### 응답 데이터
+
+| 필드명 | 타입 | 설명 |
+| :-- | :-- | :-- |
+| totalCount | number | 전체 데이터 수 |
+| totalPage | number | 전체 페이지 수 |
+| currentPage | number | 현재 페이지 번호 |
+| adjustmentItems | `adjustmentItem`\[\] | 보정 내역 데이터 배열 |
+
+- `adjustmentItem` 구조
+  | 필드명 | 타입 | 설명 |
+  | :-- | :-- | :-- |
+  | userId | string | 사용자 ID |
+  | adjustmentAmount | number | 해당 사용자의 보정 순금액 |
+  - 조회 기간 동안 발생한 보정 지급과 회수를 합산한 순금액을 사용자별로 반환하며, 응답은 userId 기준 오름차순으로 정렬됩니다.
+  - `adjustmentAmount`가 양수이면 추가 지급, 음수이면 회수가 더 많았음을 의미합니다.
+
+### 응답 예시
+
+```json
+{
+  "totalCount": 3,
+  "totalPage": 1,
+  "currentPage": 1,
+  "adjustmentItems": [
+    {
+      "userId": "USER-123",
+      "adjustmentAmount": 500
+    },
+    {
+      "userId": "USER-456",
+      "adjustmentAmount": 1200
+    },
+    {
+      "userId": "USER-789",
+      "adjustmentAmount": 300
+    }
+  ]
+}
+```
+
+### 에러 응답
+
+| HTTP 상태 | 조건 |
+| :-- | :-- |
+| 400 Bad Request | year, month 누락 / page \< 1 / limit \< 1 |
+| 403 Forbidden | 해당 기능이 활성화되지 않은 조직 |
+
+## Error Codes
+
+| HTTP | Code | 설명 |
+| :-- | :-- | :-- |
+| 400 | `INVALID_REQUEST` | 필수 필드 누락 / 포맷 오류 |
+| 401 | `UNAUTHORIZED` | API Key 오류 |
+| 409 | `DUPLICATE_TRANSACTION` | 이미 동일한 `transactionId`가 존재 |
+| 422 | `INVALID_AMOUNT` | 금액·통화 조합이 잘못됨 |
+| 500 | `INTERNAL_ERROR` | 서버 오류, 재시도 필요 |

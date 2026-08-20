@@ -1,0 +1,172 @@
+---
+title: "v1.3.0"
+---
+
+# Class
+
+## `MomentSDK`
+
+```kotlin
+class MomentSDK {
+	@JvmStatic
+	fun getInstance(context: Context): MomentSDK
+
+	fun start(config: Config, callback: ResultCallback)
+	fun stop(callback: ResultCallback)
+	fun init(config: Config, callback: RestartResultCallback)
+	fun isRunning(): Boolean
+
+	fun launchUI(config: Config, callback: ResultCallback)
+	fun launchUI(config: Config, redirectTo: String, callback: ResultCallback)
+	fun dismissUI(callback: ResultCallback)
+
+	fun setUserId(userId: String, callback: ResultCallback)
+	fun getUserId(): String
+	fun setSendBubble(sendBubble: Boolean)
+
+	fun getConsent(callback: CallbackWithResult<GetUserConsentResponse>)
+	fun setConsent(request: SubmitUserConsentRequest, callback: CallbackWithResult<SubmitUserConsentResponse>)
+	fun withdrawConsent(callback: ResultCallback)
+	fun forgetUser(callback: ResultCallback)
+
+	fun listCashback(callback: ListCashbackResultCallback)
+	fun goToCashback(businessId: String, callback: ResultCallback)
+
+	fun setProjectId(projectId: String)
+	fun setApiKey(apiKey: String)
+	fun getProjectId(appContext: Context): String
+	fun getApiKey(appContext: Context): String
+
+	@JvmStatic
+	fun isAppUsagePermissionGranted(context: Context): Boolean
+	@JvmStatic
+	fun isVpnPermissionGranted(context: Context): Boolean
+	@JvmStatic
+	fun isNotificationPermissionGranted(context: Context): Boolean
+}
+```
+
+주요 메서드에 대한 상세한 설명은 [최신 v2.0.2 Android API 문서](/ko/api/android)를 참고해주세요. v1.3.0 기준의 주요 차이점은 다음과 같습니다.
+
+- `getConsent` 은 `GetUserConsentResponse` 를 반환합니다.
+- `setConsent` 는 5개 필드(agreeTermsOfService, agreePersonalInfoUseAndSharing, agreeMarketingInfoReceive, agreeMarketingPersonalInfoUseAndSharing, agreeNighttimeNotification) 을 모두 지정해 서버에 저장합니다.
+- `withdrawConsent` 는 모든 동의 항목을 false로 설정하는 효과입니다.
+- `forgetUser` 는 외부 탈퇴 처리 후 device-local SDK 흔적을 제거하는 post-withdrawal cleanup method입니다.
+
+## `MomentSDK.Config`
+
+```kotlin
+class Config : Serializable {
+	constructor()
+	constructor(appContext: Context)
+
+	fun notificationChannelId(notificationChannelId: String): Config
+	fun notificationId(notificationId: Int): Config
+	fun notificationIconResId(notificationIconResId: Int): Config
+
+	fun serviceNotificationChannelId(serviceNotificationChannelId: String): Config
+	fun serviceNotificationId(serviceNotificationId: Int): Config
+	fun serviceNotificationIconResId(serviceNotificationIconResId: Int): Config
+	fun serviceNotificationIconColorInt(@ColorInt serviceNotificationIconColorInt: Int): Config
+	fun serviceNotificationTitle(serviceNotificationTitle: String): Config
+	fun serviceNotificationText(serviceNotificationText: String): Config
+	fun serviceNotificationLinkUrl(serviceNotificationLinkUrl: String): Config
+
+	fun hideServiceNotification(hideServiceNotification: Boolean): Config
+}
+```
+
+## `MomentException`
+
+```kotlin
+class MomentException(val errorCode: ErrorCode, errorMessage: String) : Exception(errorMessage)
+```
+
+# Enum
+
+## `ErrorCode`
+
+```kotlin
+enum class ErrorCode {
+	API_NOT_ACTIVATED, APP_USAGE_PERMISSION_REQUIRED, VPN_PERMISSION_REQUIRED,
+	NETWORK_CONNECTION_REQUIRED, SERVICE_START_FAILED, SERVICE_STOP_FAILED,
+	SERVICE_ALREADY_STARTING, PROJECT_ID_REQUIRED, API_KEY_REQUIRED,
+	GET_SIGNING_KEY_FAILED, AUTHENTICATION_FAILED, EMPTY_USER_ID,
+	EMPTY_CASHBACK_BUSINESS_ID, INVALID_CONFIG, CASHBACK_NOT_FOUND,
+	TOO_MANY_REQUESTS, TEMPORARY_SERVER_ERROR, ERROR_OCCURRED,
+	EMPTY_DEVICE_TOKEN, PUSH_NOT_SUPPORTED,
+}
+```
+
+## `MomentSDK.RestartResultCode`
+
+```kotlin
+enum class RestartResultCode {
+	SERVICE_SHOULD_NOT_BE_RUNNING,
+	SERVICE_ALREADY_RUNNING,
+	SERVICE_RESTARTED,
+}
+```
+
+# Callback
+
+```kotlin
+interface CallbackWithResult<T> {
+	fun onSuccess(result: T)
+	fun onFailure(exception: MomentException)
+}
+
+interface ResultCallback {
+	fun onSuccess()
+	fun onFailure(exception: MomentException)
+}
+
+interface RestartResultCallback {
+	fun onSuccess(resultCode: RestartResultCode)
+	fun onFailure(exception: MomentException)
+}
+
+interface ListCashbackResultCallback {
+	fun onSuccess(cashbackPrograms: List<CashbackProgram>)
+	fun onFailure(exception: MomentException)
+}
+```
+
+# Data
+
+## `GetUserConsentResponse` / `SubmitUserConsentRequest` / `SubmitUserConsentResponse`
+
+```kotlin
+class GetUserConsentResponse {
+	val agreeTermsOfService: Boolean
+	val agreePersonalInfoUseAndSharing: Boolean
+	val agreeMarketingInfoReceive: Boolean
+	val agreeMarketingPersonalInfoUseAndSharing: Boolean
+	val agreeNighttimeNotification: Boolean
+}
+```
+
+객체는 다음과 같이 builder를 통해 생성합니다.
+
+```kotlin
+val request = SubmitUserConsentRequest.newBuilder()
+	.setAgreeTermsOfService(true)
+	.setAgreePersonalInfoUseAndSharing(true)
+	.setAgreeMarketingInfoReceive(false)
+	.setAgreeMarketingPersonalInfoUseAndSharing(false)
+	.setAgreeNighttimeNotification(true)
+	.build()
+```
+
+## `CashbackProgram`
+
+```kotlin
+class CashbackProgram {
+	val businessId: String
+	val businessName: String
+	val businessImageUrl: String
+	val url: String
+	val programName: String
+	val productsList: List<CashbackProduct>
+}
+```

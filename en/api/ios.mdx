@@ -1,0 +1,177 @@
+---
+title: "iOS SDK API"
+---
+
+# Class
+
+## `MomentCashbackService`
+
+```swift
+
+class MomentCashbackService {
+    private init() {}
+    
+    // Set user ID (with callback)
+    func setUserId(_ userId: String, onComplete: CashbackCallbackPayload) {}
+    
+    // Fetch cashback list
+    func listCashback(onComplete: @Sendable @MainActor @escaping (Result<[CashbackProgramType], Error>) -> Void) {
+}
+```
+
+- Full reference
+  ```swift
+  func listCashback(onComplete: @Sendable @MainActor @escaping (Result<[CashbackProgramType], Error>) -> Void) {
+  ```
+  ## Argument
+  - _Returns_
+    - .success (list)
+    - .failure(error)
+
+## `CashbackViewController`
+
+Class used to launch the cashback service UI in UIKit
+
+```swift
+public class CashbackViewController: UIViewController {
+		// Delegate to receive return values
+    public weak var delegate: CashbackViewControllerDelegate?
+    // URL to redirect to
+    public var redirectTo: String?
+}
+```
+
+## `CashbackViewControllerDelegate`
+
+Callback delegate protocol for `CashbackViewController`
+
+```swift
+public protocol CashbackViewControllerDelegate: AnyObject {
+		// Called when the UI is dismissed
+		func cashbackViewControllerDidFinish(_ viewController: CashbackViewController)
+		
+		// Called when an error occurs in the UI
+		func cashbackViewController(_ viewController: CashbackViewController, didFailWithError error: CashbackError)
+}
+```
+
+## `CashbackError`
+
+```swift
+// WARNING: cases cannot be imported directly. You must use CashbackError.rawValue (0,1, ...).
+
+public enum CashbackError: Error {
+    /**
+     * @case userIdNotFound
+     * @discussion Indicates that no user ID could be found or retrieved,
+     *           which is necessary for Moment cashback service activation.
+     */
+    case userIdNotFound = 0
+
+    /**
+     * @case initializationError
+     * @discussion Indicates that an error occurred during CashbackUI initialization.
+     * @param error The underlying error regarding initialization.
+     */
+    case initializationError(Error)
+}
+```
+
+# Callback
+
+## `CashbackCallbackPayload`
+
+```swift
+
+/// Simple callback payload for SDK operations
+public struct CashbackCallbackPayload: Sendable {
+    public let success: Bool
+    public let message: String
+}
+```
+
+- Full reference
+  ```kotlin
+  case success:
+  ```
+  - _Description_
+    - Called when the method call succeeded.
+  ```kotlin
+  fun onFailure(exception: MomentException)
+  ```
+  - _Description_
+    - Called when the method call failed.
+
+# Data
+
+On the Moment-provided cashback program detail page, we use each data type as follows.
+
+## `CashbackProgramType`
+
+```swift
+public struct CashbackProgramType {
+    public var businessId: String
+    public var businessName: String
+    public var businessImageUrl: String
+    public var category: BusinessCategoryType
+    public var url: String
+    public var programName: String
+    public var displayAllowedCases: String
+    public var displayCaution: String
+    public var products: [CashbackProductType]
+}
+```
+
+## `CashbackProductType`
+
+```swift
+public struct CashbackProductType {
+    public var target: String
+    public var startDateTimestampMillis: Int64
+    public var endDateTimestampMillis: Int64
+    public var commissionType: CashbackCommissionType
+    public var commission: CashbackCommission
+}
+```
+
+## `CashbackCommission`
+
+```swift
+public struct CashbackCommission {
+    public var amount: String
+    public var unit: CashbackCommissionUnit
+}
+```
+
+## `CashbackCommissionType`
+
+```swift
+public enum CashbackCommissionType {
+		case unknown = 0
+    case CPS
+    case CPA
+    case CPC
+    case CPM
+}
+```
+
+## `BusinessCategoryType`
+
+```swift
+public enum BusinessCategoryType: Int, Sendable, CaseIterable {
+    case unknown = 0
+    case food
+    case mall
+    case culture
+    case travel
+    case electronics
+    case infant
+    case health
+    case fashion
+    case beauty
+    case finance
+    case living
+    case education
+    case etc
+}
+```

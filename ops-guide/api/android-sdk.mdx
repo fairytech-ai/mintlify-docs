@@ -1,0 +1,145 @@
+---
+title: "Android SDK"
+description: "실시간 실적알림을 위한 푸쉬알림(FCM) 설정법"
+---
+
+## Setup
+
+### 1단계: 프로젝트에 Firebase 추가하기
+
+Google 공식 가이드를 따라 Android 프로젝트에 Firebase를 추가합니다.
+
+- 참고: [Firebase Android 설정 가이드](https://firebase.google.com/docs/android/setup)
+
+### 2단계: Firebase Cloud Messaging API 활성화
+
+Google Cloud 콘솔에서 앱과 연결된 프로젝트를 선택한 뒤, [Firebase Cloud Messaging API](https://console.cloud.google.com/apis/library/fcm.googleapis.com)를 활성화합니다.
+
+### 3단계: 서비스 계정 만들기
+
+Fairy가 FCM 토큰 등록 시 인증된 API 호출을 할 수 있도록 새 서비스 계정을 생성합니다.
+
+1. **Google Cloud \> Service Accounts** 으로 이동 후 프로젝트를 선택하고 **CREATE SERVICE ACCOUNT** 클릭
+2. 서비스 계정 이름, ID, 설명 입력 후 **CREATE AND CONTINUE**
+3. 역할(Role) 필드에서 **Firebase Cloud Messaging API Admin** 선택
+
+<Warning>
+  **Firebase Cloud Messaging Admin** 이 아니라 반드시 **Firebase Cloud Messaging API Admin** 을 선택해야 합니다.
+</Warning>
+
+### 4단계: JSON 자격 증명 생성
+
+1. Google Cloud IAM & Admin에서 위에 만든 FCM service account 를 찾아 **Actions \> Manage Keys** 로 이동
+2. **Add Key \> Create new key** 선택
+3. **JSON** 선택 후 **CREATE** 클릭
+
+<Warning>
+  다운로드한 JSON 키는 이후 단계에서 필요하므로 안전한 위치에 보관하세요.
+</Warning>
+
+### 5단계: Fairy에 JSON 전달
+
+필요하신 환경(개발용, 운영용)에 맞게 1~4단계를 반복하신 뒤 JSON 파일을 `eng@fairytech.ai` 로 전달해주세요.
+
+## 알림 표시하기
+
+### 1. 종속성에 Cloud Messaging 추가하기
+
+`build.gradle` 에 **Firebase Messaging** 과 **Moment SDK(push 확장)** 을 추가합니다.
+
+```kotlin
+plugins {
+    id("com.google.gms.google-services")
+}
+
+dependencies {
+    implementation("com.google.firebase:firebase-messaging:+")
+    implementation "ai.fairytech:moment-x-push:${LATEST_VERSION}"
+}
+```
+
+`AndroidManifest.xml` 에 알림 권한을 추가합니다.
+
+```xml
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+```
+
+### 2. FirebaseMessagingService 생성/등록
+
+```kotlin
+class CustomFcmService : FirebaseMessagingService() {
+    override fun onNewToken(token: String) {}
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {}
+}
+```
+
+```xml
+<service
+    android:name=".CustomFcmService"
+    android:exported="false">
+    <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT" />
+    </intent-filter>
+</service>
+```
+
+### 3. MomentSDK 를 FirebaseMessagingService 와 연동하기
+
+```kotlin
+import ai.fairytech.moment.MomentSDK
+import ai.fairytech.moment.exception.MomentException
+import ai.fairytech.moment.MomentPush
+
+class CustomFcmService : FirebaseMessagingService() {
+    override fun onNewToken(token: String) {
+        MomentPush.addDeviceToken(token, object: MomentSDK.ResultCallback {
+            override fun onSuccess() {}
+            override fun onFailure() {
+                Log.w("CustomFcmService", "Failed to set token to moment")
+            }
+        })
+    }
+
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        if (MomentPush.isFairyMessage(remoteMessage)) {
+            MomentPush.handleMessage(remoteMessage)
+        }
+    }
+}
+```
+
+### 4. 유저 등록
+
+```kotlin
+val momentSDK = MomentSDK.getInstance(context)
+momentSDK.setUserId(userId, object: MomentSDK.ResultCallback {
+    override fun onSuccess() {
+        MomentPush.registerUserToPush(object: MomentSDK.ResultCallback {
+            override fun onSuccess() {}
+            override fun onFailure() {}
+        })
+    }
+    override fun onFailure() {}
+})
+```
+
+### 5. 테스트
+
+Moment Public API 를 사용해 테스트 메시지를 전송합니다.
+
+```bash
+curl -X 'POST' \
+  'https://api.public.moment.fairytech.ai/project/{YOUR_PROJECT_ID}/device-message/send' \
+  -H 'accept: */*' \
+  -H 'x-moment-api-key: {YOUR_API_KEY}' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "userId": "test-user-id",
+  "sdkVersion": "1.2.3",
+  "businessName": "gmarket"
+}'
+```
+
+<Note>
+  `x-moment-api-key` 는 sdk-api-key 와 다릅니다. 별도로 전달드린 api-key를 사용하세요.
+</Note>

@@ -1,0 +1,194 @@
+---
+title: "FCM 설정하기"
+description: "Moment SDK의 FCM 설정과 서버 발송 알림 수신 방법"
+---
+
+## Firebase 프로젝트 설정
+
+### 1. Android 앱에 Firebase 추가
+
+Android 프로젝트를 Firebase에 연결합니다.
+
+설정 과정에서 내려받은 `google-services.json`을 앱 모듈에 추가하고 Google Services Gradle 플러그인을 적용합니다.
+
+자세한 내용은 [Firebase Android 설정 가이드](https://firebase.google.com/docs/android/setup)를 참고하세요.
+
+### 2. Firebase Cloud Messaging API 활성화
+
+Google Cloud Console에서 앱과 연결된 프로젝트를 선택한 뒤 Firebase Cloud Messaging API를 활성화합니다.
+
+설정은 [Firebase Cloud Messaging API](https://console.cloud.google.com/apis/library/fcm.googleapis.com) 페이지에서 진행할 수 있습니다.
+
+### 3. 서비스 계정 및 JSON 키 생성
+
+Fairy의 서버 발송 알림 연동에 필요한 서비스 계정을 생성합니다.
+
+아래는 설정 예시입니다.
+
+1. Google Cloud Console에서 **IAM 및 관리자 \> 서비스 계정**으로 이동합니다.
+2. 프로젝트를 선택하고 **서비스 계정 만들기**를 선택합니다.
+3. 역할로 **Firebase Cloud Messaging API Admin**을 지정합니다.
+4. 생성한 서비스 계정에서 **키 관리 \> 키 추가 \> 새 키 만들기**로 이동합니다.
+5. 키 유형으로 **JSON**을 선택해 자격 증명을 내려받습니다.
+6. 개발 및 운영 환경이 분리되어 있다면 환경별로 위 과정을 진행한 뒤 JSON 파일을 Fairy 담당자에게 전달합니다.
+
+전달처: [eng@fairytech.ai](mailto:eng@fairytech.ai)
+
+자세한 내용은 Google Cloud 공식 문서를 참고하세요.
+
+- [서비스 계정 만들기](https://cloud.google.com/iam/docs/service-accounts-create)
+- [서비스 계정 키 만들기](https://cloud.google.com/iam/docs/keys-create-delete)
+
+## Android 앱 설정
+
+### 1. Firebase Cloud Messaging 종속성 추가
+
+앱 모듈의 `build.gradle.kts`에 Firebase Messaging 종속성을 추가합니다. 다음은 설정 예시입니다.
+
+```kotlin
+dependencies {
+    implementation("com.google.firebase:firebase-messaging:+")
+}
+```
+
+자세한 내용은 [Firebase Cloud Messaging Android 클라이언트 설정 가이드](https://firebase.google.com/docs/cloud-messaging/android/client)를 참고하세요.
+
+### 2. 알림 권한 추가
+
+다음은 `AndroidManifest.xml` 설정 예시입니다.
+
+```xml
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+```
+
+자세한 내용은 [Android 알림 런타임 권한 가이드](https://developer.android.com/develop/ui/views/notifications/notification-permission)를 참고하세요.
+
+## FirebaseMessagingService 연동
+
+Moment SDK는 호스트 앱의 `FirebaseMessagingService`를 대신 등록하지 않습니다. FCM 토큰 갱신과 Fairy 메시지 수신 결과를 Moment SDK로 전달해야 합니다.
+
+### 1. FirebaseMessagingService 구현
+
+다음은 Fairy 메시지를 Moment SDK로 전달하는 예시입니다.
+
+```kotlin
+import ai.fairytech.moment.MomentPush
+import ai.fairytech.moment.MomentSDK
+import ai.fairytech.moment.exception.MomentException
+import android.util.Log
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
+
+class CustomFcmService : FirebaseMessagingService() {
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+
+        MomentPush.addDeviceToken(
+            token,
+            object : MomentSDK.ResultCallback {
+                override fun onSuccess() = Unit
+
+                override fun onFailure(exception: MomentException) {
+                    Log.w("CustomFcmService", "Failed to register FCM token", exception)
+                }
+            },
+        )
+    }
+
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        if (MomentPush.isFairyMessage(remoteMessage)) {
+            MomentPush.handleMessage(remoteMessage)
+            return
+        }
+
+        // 호스트 앱의 다른 FCM 메시지를 처리합니다.
+    }
+}
+```
+
+이미 `FirebaseMessagingService`를 사용하고 있다면 새 서비스를 만들지 말고 기존 `onMessageReceived()`에 Fairy 메시지 처리 분기만 추가합니다.
+
+### 2. 서비스 등록
+
+새 서비스를 만든 경우 `AndroidManifest.xml`에 등록합니다. 다음은 서비스 등록 예시입니다.
+
+```xml
+<service
+    android:name=".CustomFcmService"
+    android:exported="false">
+    <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT" />
+    </intent-filter>
+</service>
+```
+
+자세한 내용은 [Firebase 메시지 수신 가이드](https://firebase.google.com/docs/cloud-messaging/android/receive)를 참고하세요.
+
+## 테스트
+
+테스트 메시지는 `userId` 또는 user attribute로 대상을 지정할 수 있습니다. 두 방식 중 정확히 하나만 사용해야 합니다.
+
+### `MomentSDK.setUserId()`를 사용하는 경우
+
+다음은 `MomentSDK.setUserId()`로 설정한 `userId`를 이용해 서버 발송 알림을 확인하는 예시입니다.
+
+1. 앱에서 `MomentSDK.init()`을 호출합니다.
+2. 테스트 대상 기기에서 `MomentSDK.setUserId()`를 호출합니다.
+3. Fairy 메시지 발송 API에 `userId`를 전달합니다.
+4. 호스트 앱의 `FirebaseMessagingService.onMessageReceived()`를 통해 메시지가 Moment SDK로 전달되고 알림이 표시되는지 확인합니다.
+
+```bash
+PROJECT_ID="<YOUR_PROJECT_ID>"
+API_KEY="<YOUR_API_KEY>"
+USER_ID="<YOUR_USER_ID>"
+
+curl -X POST \
+  "https://api.public.moment.fairytech.ai/project/${PROJECT_ID}/device-message/send" \
+  -H "x-moment-api-key: ${API_KEY}" \
+  -H 'Content-Type: application/json' \
+  -d "{
+    \"userId\": \"${USER_ID}\"
+  }"
+```
+
+### `MomentSDK.setUserId()`를 사용하지 않는 경우
+
+`MomentSDK.setUserId()`를 사용하지 않으면 SDK 설치에 등록된 user attribute로 대상을 지정할 수 있습니다. 다음은 서버 발송 알림을 확인하는 예시입니다.
+
+1. 앱에서 `MomentSDK.init()`을 호출합니다.
+2. 테스트 대상 기기에서 `MomentSDK.setUserAttributes()`로 `fcm-test` attribute를 등록합니다. `attributeValue`에는 테스트 대상 기기만 사용하는 고유한 값을 지정합니다.
+3. Fairy 메시지 발송 API에 `attributeKey`와 `attributeValue`를 전달합니다.
+4. 호스트 앱의 `FirebaseMessagingService.onMessageReceived()`를 통해 메시지가 Moment SDK로 전달되고 알림이 표시되는지 확인합니다.
+
+```bash
+PROJECT_ID="<YOUR_PROJECT_ID>"
+API_KEY="<YOUR_API_KEY>"
+ATTRIBUTE_KEY="fcm-test"
+ATTRIBUTE_VALUE="<UNIQUE_TEST_ATTRIBUTE_VALUE>" # UUID처럼 중복될 가능성이 낮은 값을 사용하세요.
+
+curl -X POST \
+  "https://api.public.moment.fairytech.ai/project/${PROJECT_ID}/device-message/send" \
+  -H "x-moment-api-key: ${API_KEY}" \
+  -H 'Content-Type: application/json' \
+  -d "{
+    \"attributeKey\": \"${ATTRIBUTE_KEY}\",
+    \"attributeValue\": \"${ATTRIBUTE_VALUE}\"
+  }"
+```
+
+`attributeValue`는 저장된 user attribute와 값과 타입이 모두 일치해야 합니다. 지원하는 타입은 `string`, `number`, `boolean`입니다. 대량 테스트 발송을 방지하기 위해 10명을 초과해 매칭되는 값은 사용할 수 없으므로, 테스트 대상 기기에만 할당한 값을 사용하세요.
+
+테스트 메시지가 수신되지 않으면 다음 항목을 확인합니다.
+
+- 앱이 올바른 Firebase 프로젝트의 `google-services.json`을 사용하는지
+- Fairy에 전달한 서비스 계정이 같은 Firebase 프로젝트에 속하는지
+- `MomentSDK.init()`의 `RestartResultCallback.onSuccess()`가 호출되었는지
+- `MomentSDK.setUserId()`를 사용하는 경우 `userId`가 SDK에 설정된 값과 일치하는지
+- `attributeKey`와 `attributeValue`가 대상 기기에 등록된 값과 일치하는지
+- `attributeValue`의 타입이 등록된 user attribute의 타입과 일치하는지
+- `attributeValue`가 테스트 대상 기기에만 할당한 값인지
+- 호스트 앱에서 구현한 `FirebaseMessagingService`가 Manifest에 등록되어 있는지
+- 알림 권한이 허용되어 있는지
+
+{/*  배포 전 확인: user attribute 타겟팅 API의 production 배포 여부를 확인한다.  */}

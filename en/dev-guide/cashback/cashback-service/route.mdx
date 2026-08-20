@@ -1,0 +1,39 @@
+---
+title: "Deep-link into a specific page in Cashback Web"
+description: "Route to a specific page"
+---
+
+## Overview
+
+If you want to open a specific page rather than the main Cashback page, use the following.
+
+## API
+
+- `launchUI(config, redirectTo, callback)` method reference
+  - [fun launchUI(config: Config, redirectTo: String, callback: ResultCallback)](/en/api/android)
+- redirectTo: the path Cashback Web will redirect to. Supported pages:
+  | Page | redirectTo |
+  | :-- | :-- |
+  | Specific category on the main page | `/cashback?category=beauty` |
+  | Cashback program | `/cashback/detail?business_id=11st` |
+  | User earnings history | `/cashback/transactions` |
+  | Settings | `/settings` |
+  | CS inquiry | `/cs` |
+
+## Code example
+
+```kotlin
+val redirectTo = "/pointshop/transactions"
+
+momentSdk.launchUI(
+		momentSdkConfig,
+		redirectTo,
+		object : MomentSDK.ResultCallback {
+				override fun onSuccess() {}
+
+				override fun onFailure(exception: MomentException) {}
+    }
+)
+```
+
+([Example code link](https://github.com/fairytech-external/android-cashback-starter/blob/426d96be28b8bbf0b38975535d620e611b3585cf/app/src/main/java/ai/fairytech/moment/sample/ui/cashback/CashbackActivity.kt#L37))

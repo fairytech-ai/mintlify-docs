@@ -1,0 +1,65 @@
+---
+title: "연동하기 (copy)"
+description: "Sigma 연동 및 마케팅 푸시 수신 설정"
+hidden: true
+---
+
+<Tip>
+  Sigma는 동의 개념이 없고 `user_id` 도 필요 없습니다. 호스트 앱이 보유한 마케팅 푸시 수신 가능 여부만 SDK로 전달하면 됩니다.
+</Tip>
+
+## 사전 준비
+
+<Warning>
+  [시작하기 \> Android Setup](/ko/dev-guide/getting-started/setup) 을 먼저 완료하세요.
+</Warning>
+
+## STEP 1) 앱 시작 시점에 init 호출하기
+
+`Application#onCreate` 에서 `init` 을 호출합니다. Sigma 관련 데이터 초기화가 함께 수행됩니다.
+
+```kotlin
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        val moment = MomentSDK.getInstance(this)
+        moment.init(
+            config,
+            object : MomentSDK.RestartResultCallback {
+                override fun onSuccess(resultCode: MomentSDK.RestartResultCode) {}
+
+                override fun onFailure(exception: MomentException) {}
+            }
+        )
+    }
+}
+```
+
+## STEP 2) 마케팅 푸시 수신 가능 여부 전달하기
+
+사용자의 마케팅 푸시 수신 가능 여부가 항상 최신으로 유지될 수 있도록, **로그인 시점과 메인 화면 진입 시점**에 `setMarketingPushEnabled` 를 호출해주세요.
+
+```kotlin
+MomentSDK.getInstance(context).setMarketingPushEnabled(true) // 수신 가능 여부
+```
+
+<Tip>
+  사용자당 최소 1회는 호출되어야 해당 사용자에게 마케팅 알림이 발송될 수 있습니다.
+</Tip>
+
+<Note>
+  값이 변경된 경우에만 서버에 업로드되므로, 같은 값으로 반복 호출해도 부담이 없습니다.
+</Note>
+
+## 다음 단계
+
+<CardGroup cols={2}>
+  <Card title="연동 테스트하기" icon="vial" href="/ko/dev-guide/sigma-targeting/integration-test">
+    연동이 올바르게 동작하는지 확인합니다.
+  </Card>
+
+  <Card title="X + Sigma 함께 쓰기" icon="layer-group" href="/ko/dev-guide/x-with-sigma">
+    X와 함께 사용하는 경우의 호출 순서를 확인합니다.
+  </Card>
+</CardGroup>

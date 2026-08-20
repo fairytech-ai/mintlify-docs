@@ -1,0 +1,126 @@
+---
+title: "iOS (Swift) Integration"
+---
+
+## Prerequisites
+
+<Warning>
+  Complete [Getting Started \> iOS Setup](/en/dev-guide/getting-started/ios-setup) first.
+</Warning>
+
+## Integration
+
+### STEP 1) Set the user ID
+
+Set the user ID before using the cashback service. If the user ID is not set, CashbackUI will show a view with an error message.
+
+```swift
+MomentCashbackService.setUserId(userId) { [weak self] payload in
+    DispatchQueue.main.async { [weak self] in
+        guard let self = self else { return }
+        if payload.success {
+		        // TODO: start the cashback service 
+        } else {
+        		// TODO: error handling
+        }
+    }
+}
+```
+
+### STEP 2) Use `CashbackViewController` from your ViewController
+
+In the example below, launching the cashback service and program lookup both happen.
+
+```swift
+class ContentViewController: UIViewController {
+    // Stores the URL to redirect to
+    private var redirectURL: String?
+
+		// Load the cashback page on button tap
+    private func setupActions() {
+        redirectButton.addTarget(self, action: #selector(didTapRedirect), for: .touchUpInside)
+        launchButton.addTarget(self, action: #selector(didTapLaunch), for: .touchUpInside)
+    }
+
+    @objc private func didTapRedirect() {
+        // Set the redirectURL
+        redirectURL = "/cashback/detail?business_id=coupang"
+        setUserAndPresentCashback()
+    }
+
+    @objc private func didTapLaunch() {
+			  // Land on the main page
+        redirectURL = nil
+        setUserAndPresentCashback()
+    }
+
+    private func setUserAndPresentCashback() {
+        MomentCashbackService.setUserId(userId) { [weak self] payload in
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                if payload.success {
+                    self.presentCashback()
+                } else {
+                    self.showAlert(message: payload.message)
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func presentCashback() {
+        let vc = CashbackViewController()
+        vc.delegate = self
+        vc.redirectTo = redirectURL
+        vc.modalPresentationStyle = .fullScreen
+        present(vc, animated: true)
+    }
+    
+    private func showAlert(message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+}
+```
+
+### STEP 3) Implement `CashbackViewControllerDelegate`
+
+Handle the moment the web content signals it's finished (e.g., the user taps the in-view back button) via the `cashbackViewControllerDidFinish` callback.
+
+<Frame>
+  ![Image](/images/image-6.png)
+</Frame>
+
+To separately handle cases where the cashback view fails to load properly, use `cashbackViewController`.
+
+```swift
+extension ContentViewController: CashbackViewControllerDelegate {
+    func cashbackViewControllerDidFinish(_ viewController: CashbackViewController) {
+        // When the SwiftUI screen completes
+        viewController.dismiss(animated: true)
+    }
+
+    func cashbackViewController(_ viewController: CashbackViewController, didFailWithError error: CashbackError) {
+        // When the SwiftUI screen errors out
+        viewController.dismiss(animated: true) { [weak self] in
+            self?.showAlert(message: error.localizedDescription)
+        }
+    }
+}
+```
+
+## Next steps
+
+More ways to leverage the cashback service
+
+<Columns cols={2}>
+  <Column>
+    <Card title="Deep-link into a specific page in Cashback Web" icon="sparkles" href="/en/dev-guide/cashback/cashback-service/ios/route">
+    </Card>
+  </Column>
+  <Column>
+    <Card title="Expose the cashback program list externally" icon="sparkles" href="/en/dev-guide/cashback/cashback-service/ios/programs">
+    </Card>
+  </Column>
+</Columns>

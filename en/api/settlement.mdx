@@ -1,0 +1,98 @@
+---
+title: "Confirmed earnings list API"
+---
+
+If you want to convert monthly confirmed cashback earnings into your own rewards (custom currency, coupons, etc.), use Fairy's **confirmed-earnings API** to pull the data and drive your reward conversion logic.
+
+A typical implementation: **at monthly settlement time (around the 5th–7th), run a batch job or scheduled task that calls the API**, pulls the confirmed earnings for the month, and executes the conversion logic.
+
+### Reward conversion (confirmed-earnings-based) \+ user history scenario
+
+(✅: development required)
+
+<Frame>
+  ![Image](/images/image-6.png)
+</Frame>
+
+# Confirmed earnings API spec
+
+## Request
+
+### Endpoint
+
+```json
+GET <https://api.public.moment.fairytech.ai/organization/:organizationPublicId/settled_transactions>
+```
+
+### Headers
+
+| Header | Required | Description |
+| :-- | :-- | :-- |
+| x-moment-api-key | O | API server auth key |
+
+### Path parameters
+
+| Parameter | Type | Description | Required | Default |
+| :-- | :-- | :-- | :-- | :-- |
+| organizationPublicId | string | Host ID | O | - |
+
+\<aside\><br />💡 **Tip:** If you didn't previously receive an organizationPublicId by email,<br />please email [eng@fairytech.ai](mailto:eng@fairytech.ai).
+
+\</aside\>
+
+### Query string
+
+| Parameter | Type | Description | Required | Default |
+| :-- | :-- | :-- | :-- | :-- |
+| year | number | Year to query (YYYY) | O | - |
+| month | number | Month to query (1-12) | O | - |
+| page | number | Page number | X | 1 |
+| limit | number | Rows per page (1–100) | X | 100 |
+| user\_id | string | Single user ID to query | X | - |
+
+If you pass `user_id`, only that user's earnings are returned; in that case the response is by single user, so page and limit are unnecessary.
+
+### Example
+
+```sql
+GET <https://api.public.moment.fairytech.ai/organization/fairy_card/settled_transactions?year=2025&month=11&page=1&limit=20>
+```
+
+## Response
+
+### Data
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| totalCount | number | Total row count |
+| totalPage | number | Total page count |
+| currentPage | number | Current page number |
+| settlementItems | `settlementItem`\[\] | Transaction rows |
+
+- `settlementItem`
+  | Field | Type | Description |
+  | :-- | :-- | :-- |
+  | userId | string | User ID |
+  | confirmedAmount | number | Sum of the user's confirmed-earnings commission |
+  - We return commission summed per user (deduplicated) across every transaction in the query range, sorted ascending by userId.
+  - `confirmedAmount` is the sum of each of the user's individual commissions rounded up.
+
+### Example
+
+```json
+{
+  "totalCount": 40,
+  "totalPage": 20,
+  "currentPage": 1,
+  "settlementItems": [
+    {
+      "userId": "USER-123",
+      "confirmedAmount": 957
+    },
+    {
+      "userId": "USER-456",
+      "confirmedAmount": 4877
+    },
+  ]
+}
+```

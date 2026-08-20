@@ -1,0 +1,77 @@
+---
+title: "캐시백 프로그램 목록을 외부에서 노출하기"
+description: "앱 내에 캐시백 프로그램 목록을 조회해 노출"
+---
+
+## 개요
+
+본 가이드는 **페어리 캐시백 웹 외부에서 캐시백 프로그램 정보를 노출**하고, 사용자가 프로그램 상세 페이지로 쉽게 유입될 수 있도록 돕는 방법을 설명합니다.
+
+## **Step 1) 캐시백 프로그램 목록 조회하기**
+
+- 캐시백 프로그램 정보는 SDK에서 제공하는 listCashback 메서드를 통해 가져올 수 있습니다.
+- listCashback(callback: ListCashbackResultCallback)
+  - [fun setConsent(request: SubmitUserConsentRequest, callback: CallbackWithResult\<SubmitUserConsentResponse\>)](/ko/api/android)
+
+## **Step 2) Callback 을 통해 결과 처리하기**
+
+- listCashback 호출 후, 결과는 ListCashbackResultCallback의 onSuccess를 통해 전달됩니다.
+- 이곳에서 **캐시백 프로그램 목록 (CashbackProgram)** 데이터를 사용할 수 있습니다.
+  - [Callback](/ko/api/android)
+  - `CashbackProgram`
+
+### **외부 노출 시 활용 가능한 주요 데이터**
+
+- CashbackProgram 객체에는 외부 UI에서 활용할 수 있는 다양한 정보가 포함되어 있습니다.<br />주요 필드는 다음과 같습니다.
+  | 필드명 | 설명 | 예시 |
+  | :-- | :-- | :-- |
+  | businessId | 캐시백 프로그램을 운영하는 쇼핑몰의 고유 id |  |
+  | businessName | 쇼핑몰의 노출용 이름 |  |
+  | businessImageUrl | 쇼핑몰의 로고 이미지 |  |
+  | products | 캐시백 프로그램의 대상 상품 목록 |  |
+  | products\[index\].comission | 캐시백 상품의 커미션 정보.<br /><br />- amount \+ unit 조합<br /> | amount: `“2.5”`<br />unit: `PERCENTAGE_COMMISSION_UNIT` |
+  <Frame>
+    <img
+      src="/images/image.png"
+      alt="Image"
+      title="Image"
+      style={{ width:"76%" }}
+    />
+  </Frame>
+
+## **Step 3) 프로그램 상세 페이지로 이동시키기**
+
+- 사용자가 특정 캐시백 프로그램을 클릭했을 때, 해당 프로그램의 상세 페이지로 바로 이동할 수 있습니다.
+- launchUI 호출 시 businessId를 전달하여 **상세 페이지로 런딩**할 수 있습니다.
+- 구체적인 방법은 [1. 캐시백 웹 내 특정 페이지를 바로 제공하기](/ko/dev-guide/cashback/cashback-service/route) 를 참고하세요.
+
+## **예시 코드**
+
+```kotlin
+listCashback(object : ListCashbackResultCallback {
+    override fun onSuccess(programs: List<CashbackProgram>) {
+        // 프로그램 목록을 UI에 표시
+        cashbackPrograms.forEach { program ->
+          val businessId = program.businessId
+          val name = program.businessName
+          val logoUrl = program.businessImageUrl
+          
+          // 최대 N% 할인! 표기를 위해서는 productsList 내의 아이템 중 
+          // commission 이 가장 높은 데이터를 찾아 제공할 수도 있습니다.
+          val commission = program.productsList[0].commission
+
+          showCashbackItem(businessId, name, logoUrl, commission) {
+              momentSDK.launchUI(
+                  config,
+                  "/cashback/detail?business_id=$businessId",
+                  callback
+              )
+          }
+      }
+    }
+    override fun onFailure(error: Throwable) {
+        // 에러 처리
+        showError(error.message)
+    }
+})
+```

@@ -1,0 +1,261 @@
+---
+title: "Android API"
+---
+
+<Check>
+  **version: v2.0.2**
+</Check>
+
+# Class
+
+## `MomentSDK`
+
+```kotlin
+class MomentSDK {
+	@JvmStatic
+	fun getInstance(context: Context): MomentSDK
+
+	// Lifecycle
+	fun start(config: Config, callback: ResultCallback)
+	fun stop(callback: ResultCallback)
+	fun init(config: Config, callback: RestartResultCallback)
+	fun isRunning(): Boolean
+
+	// UI
+	fun launchUI(config: Config, callback: ResultCallback, finishCallback: UiFinishCallback? = null)
+	fun launchUI(config: Config, redirectTo: String, callback: ResultCallback, finishCallback: UiFinishCallback? = null)
+	fun dismissUI(callback: ResultCallback)
+
+	// User
+	fun setUserId(userId: String, callback: ResultCallback)
+	fun getUserId(): String
+	fun setAdId(adId: String, isAdTrackingEnabled: Boolean, callback: ResultCallback)
+	fun setUserAttributes(userAttributes: UserAttributes, callback: ResultCallback)
+	fun setSendBubble(sendBubble: Boolean)
+
+	// Consent
+	fun getConsent(callback: CallbackWithResult<UserConsent>)
+	fun setConsent(userConsent: UserConsent, callback: CallbackWithResult<UserConsent>)
+	fun logout(callback: ResultCallback)
+	fun withdraw(callback: ResultCallback)
+
+	// Cashback
+	fun listCashback(callback: ListCashbackResultCallback)
+	fun goToCashback(businessId: String, callback: ResultCallback)
+
+	// Permission utils
+	@JvmStatic
+	fun isAppUsagePermissionGranted(context: Context): Boolean
+	@JvmStatic
+	fun isVpnPermissionGranted(context: Context): Boolean
+	@JvmStatic
+	fun isNotificationPermissionGranted(context: Context): Boolean
+}
+```
+
+For detailed method descriptions see the [previous version - v2.0.0 API doc](/en/api/android-api/2.0.0). This page carries the same signatures at v2.0.2.
+
+## `MomentSDK.Config`
+
+```kotlin
+class Config : Serializable {
+	constructor()
+	constructor(appContext: Context)
+
+	fun notificationChannelId(notificationChannelId: String): Config
+	fun notificationId(notificationId: Int): Config
+	fun notificationIconResId(notificationIconResId: Int): Config
+
+	fun serviceNotificationChannelId(serviceNotificationChannelId: String): Config
+	fun serviceNotificationId(serviceNotificationId: Int): Config
+	fun serviceNotificationIconResId(serviceNotificationIconResId: Int): Config
+	fun serviceNotificationIconColorInt(@ColorInt serviceNotificationIconColorInt: Int): Config
+	fun serviceNotificationTitle(serviceNotificationTitle: String): Config
+	fun serviceNotificationText(serviceNotificationText: String): Config
+	fun serviceNotificationLinkUrl(serviceNotificationLinkUrl: String): Config
+
+	fun hideServiceNotification(hideServiceNotification: Boolean): Config
+}
+```
+
+Config follows the builder pattern; each setter returns `Config` for chaining.
+
+When you create the notification channel passed as `notificationChannelId`, set its importance to `IMPORTANCE_HIGH` or higher. (Otherwise the notification won't be delivered as a heads-up.)
+
+## `MomentException`
+
+```kotlin
+class MomentException(val errorCode: ErrorCode, errorMessage: String) : Exception(errorMessage) {
+	constructor(errorCode: ErrorCode, context: Context)
+
+	val errorCode: ErrorCode
+	override val message: String
+}
+```
+
+## `UserAttributes`
+
+```kotlin
+class UserAttributes private constructor(
+	val gender: Gender?,
+	val birthYear: Int?,
+) {
+	class Builder {
+		fun gender(value: Gender): Builder
+		fun birthYear(value: Int): Builder
+		fun build(): UserAttributes
+	}
+}
+```
+
+Build an instance via the builder:
+
+```kotlin
+val attrs = UserAttributes.Builder()
+	.gender(Gender.FEMALE)
+	.birthYear(1990)
+	.build()
+```
+
+# Enum
+
+## `ErrorCode`
+
+```kotlin
+enum class ErrorCode {
+	API_NOT_ACTIVATED,
+	APP_USAGE_PERMISSION_REQUIRED,
+	VPN_PERMISSION_REQUIRED,
+	NETWORK_CONNECTION_REQUIRED,
+	SERVICE_START_FAILED,
+	SERVICE_STOP_FAILED,
+	SERVICE_ALREADY_STARTING,
+	PROJECT_ID_REQUIRED,
+	API_KEY_REQUIRED,
+	GET_SIGNING_KEY_FAILED,
+	AUTHENTICATION_FAILED,
+	EMPTY_USER_ID,
+	EMPTY_CASHBACK_BUSINESS_ID,
+	INVALID_CONFIG,
+	INVALID_USER_ATTRIBUTES,
+	CASHBACK_NOT_FOUND,
+	TOO_MANY_REQUESTS,
+	TEMPORARY_SERVER_ERROR,
+	ERROR_OCCURRED,
+	EMPTY_DEVICE_TOKEN,
+	PUSH_NOT_SUPPORTED,
+}
+```
+
+## `Gender`
+
+```kotlin
+enum class Gender {
+	MALE,
+	FEMALE,
+}
+```
+
+## `MomentSDK.RestartResultCode`
+
+```kotlin
+enum class RestartResultCode {
+	SERVICE_SHOULD_NOT_BE_RUNNING,
+	SERVICE_ALREADY_RUNNING,
+	SERVICE_RESTARTED,
+}
+```
+
+# Callback
+
+## `MomentSDK.CallbackWithResult<T>`
+
+```kotlin
+interface CallbackWithResult<T> {
+	fun onSuccess(result: T)
+	fun onFailure(exception: MomentException)
+}
+```
+
+## `MomentSDK.ResultCallback`
+
+```kotlin
+interface ResultCallback {
+	fun onSuccess()
+	fun onFailure(exception: MomentException)
+}
+```
+
+## `MomentSDK.UiFinishCallback`
+
+```kotlin
+interface UiFinishCallback {
+	fun onFinish()
+}
+```
+
+Triggered when the Fairy-provided WebView launched via `launchUI` finishes.
+
+## `MomentSDK.RestartResultCallback`
+
+```kotlin
+interface RestartResultCallback {
+	fun onSuccess(resultCode: RestartResultCode)
+	fun onFailure(exception: MomentException)
+}
+```
+
+## `MomentSDK.ListCashbackResultCallback`
+
+```kotlin
+interface ListCashbackResultCallback {
+	fun onSuccess(cashbackPrograms: List<CashbackProgram>)
+	fun onFailure(exception: MomentException)
+}
+```
+
+# Data
+
+## `UserConsent`
+
+```kotlin
+class UserConsent(items: List<ConsentItem>) {
+	val items: List<ConsentItem>
+	fun isGranted(code: String): Boolean?
+}
+
+data class ConsentItem(
+	val code: String,
+	val isGranted: Boolean,
+)
+```
+
+- The consent object used by `setConsent` / `getConsent`.
+- `isGranted(code)` returns **null** when the code isn't present, otherwise the consent boolean (true/false).
+
+Supported consent item codes
+
+- `TERMS_OF_SERVICE` — Terms of service
+- `PERSONAL_INFO` — Personal information collection/use
+- `MARKETING_PUSH` — Marketing communications
+- `MARKETING_PERSONAL_INFO` — Personal-info processing for marketing purposes
+- `NIGHTTIME_PUSH` — Nighttime notifications
+- `PARTNER_THIRD_PARTY_PROVISION` — Third-party sharing consent (partners)
+- `HOST_AD_PUSH` — Host-app marketing notification consent
+- `HOST_NIGHTTIME_PUSH` — Host-app nighttime notification consent
+
+## `CashbackProgram`
+
+```kotlin
+class CashbackProgram {
+	val businessId: String
+	val businessName: String
+	val businessImageUrl: String
+	val url: String
+	val programName: String
+	val productsList: List<CashbackProduct>
+}
+```
+
+- `productsList` is never empty; `[0]` is always the main product.
+- When all entries share the same program, `[0]` has `target = ""`.

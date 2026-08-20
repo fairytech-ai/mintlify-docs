@@ -1,0 +1,97 @@
+---
+title: "Integration Testing"
+---
+
+For security reasons, the SDK does not print internal logs. Verify the integration through **callback results** and **actual notification delivery**, not logs.
+
+## Checklist
+
+<Steps>
+  <Step title="Verify SDK initialization">
+    Check that the `onSuccess` callback is invoked after calling `init`. Adding a temporary log inside the callback makes this easy to confirm.
+
+    ```kotlin
+    moment.init(config, object : MomentSDK.RestartResultCallback {
+        override fun onSuccess(resultCode: MomentSDK.RestartResultCode) {
+            Log.d("MomentCheck", "init success: $resultCode")
+        }
+        override fun onFailure(exception: MomentException) {
+            Log.w("MomentCheck", "init failed: ${exception.errorCode}")
+        }
+    })
+    ```
+  </Step>
+  <Step title="Verify consent value delivery">
+    `setMarketingPushEnabled` / `setNightMarketingPushEnabled` are fire-and-forget methods with no callback. You only need to confirm that the calls are actually made. If an upload fails, it is automatically retried on the next call.
+
+    <Warning>
+      **Please keep this in mind during development.** Consent values are only reflected on the server for users the method is called for. Call it with the current consent value not only when consent is newly collected, but also at a point that **every user passes through, including existing users (e.g. on main screen entry)**. If the value is unchanged, the server call is skipped, so calling it repeatedly has no cost.
+    </Warning>
+
+    Run the test with marketing push consent granted (`setMarketingPushEnabled(true)`). If the consent value is false, marketing notifications are not displayed.
+  </Step>
+  <Step title="Verify the app-exit test notification (push integrations)">
+    Fairy sets up the integration test notification (sent on app exit) in your development project. Request the setup through your support channel before starting the test.
+
+    1. Launch the app with steps 1–2 verified.
+    2. Press the home button to **exit the app**.
+    3. If the test notification arrives shortly after, the **device-to-server integration is complete**.
+  </Step>
+  <Step title="Verify by sending directly via FCM (optional)">
+    If you have completed the FCM integration, you can also verify by sending a test message directly through the Moment Public API. `x-moment-api-key` is a separate key from the SDK key, so request one through your support channel if you don't have it.
+
+    Specify the target with **exactly one** method: `userId` or a user attribute.
+
+    **Target by userId** — for integrations that register a user identifier via `setUserId`:
+
+    ```bash
+    curl -X POST \
+      'https://api.public.moment.fairytech.ai/project/{PROJECT_ID}/device-message/send' \
+      -H 'accept: */*' \
+      -H 'x-moment-api-key: {API_KEY}' \
+      -H 'Content-Type: application/json' \
+      -d '{ "userId": "test-user-id" }'
+    ```
+
+    Use the exact value registered via `setUserId` as the `userId`. The notification is sent to that user's device.
+
+    **Target by user attribute** — for integrations that do not use `setUserId`, specify the target with the key and value of an attribute uploaded via `setUserAttributes`:
+
+    ```bash
+    curl -X POST \
+      'https://api.public.moment.fairytech.ai/project/{PROJECT_ID}/device-message/send' \
+      -H 'accept: */*' \
+      -H 'x-moment-api-key: {API_KEY}' \
+      -H 'Content-Type: application/json' \
+      -d '{ "attributeKey": "member_id", "attributeValue": "user-1234" }'
+    ```
+
+    <Note>
+      `attributeValue` must match the uploaded value **including its type** (string `"1"` ≠ number `1`). Sending is rejected when the attribute matches more than 10 users, so use an attribute that identifies a specific user.
+    </Note>
+  </Step>
+  <Step title="Verify data ingestion">
+    Fairy verifies that the data collected on devices has been ingested correctly on the server. Share your **integration development start date** through your support channel, and we will check the ingestion the next day and confirm whether the integration is complete.
+  </Step>
+</Steps>
+
+## Common issues
+
+<AccordionGroup>
+  <Accordion title="The test notification does not arrive">
+    Check the items below in order. If the issue persists, contact us through your support channel.
+
+    | Item | What to check |
+    | --- | --- |
+    | Notification permission | On Android 13\+, check that the `POST_NOTIFICATIONS` runtime permission is granted (device Settings \> Apps \> Notifications) |
+    | Consent value | Check that `setMarketingPushEnabled(true)` has been called. For tests during night hours (9 PM–8 AM), `setNightMarketingPushEnabled(true)` is also required |
+    | User registration | Check that `registerUserToPush` succeeded. The target userId must be linked to the device |
+    | Service account JSON | Check that the Firebase service account JSON (development) has been delivered to Fairy and applied |
+    | Message handling | Check that `onMessageReceived` delegates via `isFairyMessage` → `handleMessage`, and that the service is registered in the Manifest |
+    | Environment (project) | The test notification is only sent from the **development project**. Check that the app is built with the development configuration |
+  </Accordion>
+
+  <Accordion title="The registerUserToPush callback is not invoked">
+    When the userId is the same as the previously registered one, the SDK skips the call internally (no-op), and the callback may not be invoked. Verify at the first registration, e.g. the first login after clearing app data. Do not attach follow-up logic to this callback.
+  </Accordion>
+</AccordionGroup>

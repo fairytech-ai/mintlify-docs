@@ -1,0 +1,43 @@
+---
+title: "UI 이용하기"
+description: "페어리가 제공하는 동의/설정 페이지 사용"
+---
+
+## 개요
+
+페어리가 제공하는 웹 기반 동의/설정 페이지를 호출해 동의 및 권한 안내를 한 화면에서 처리할 수 있습니다. 메뉴 진입/설정 화면 연결 등의 이유로 여러 진입점이 필요할 때 적합합니다.
+
+## 동의 요청 UI 실행
+
+```kotlin
+Moment.launchUI(
+    activity = activity,
+    page = MomentUIPage.CONSENT
+)
+```
+
+- 디자인은 [Web Design - Theme](/dev-guide/cashback/web-design-theme) 의 테마 설정을 따릅니다.
+- 동의 완료 시 콜백에 결과가 전달됩니다.
+
+## 설정 페이지 UI 실행
+
+```kotlin
+Moment.launchUI(
+    activity = activity,
+    page = MomentUIPage.SETTINGS
+)
+```
+
+## 권한 안내 환경 딩크
+
+UI 페이지에서는 알림 권한 및 앱 사용 정보 접근 권한 안내가 함께 제공됩니다. 사용자가 권한 설정을 완료하면 자동으로 앱으로 돌아옵니다.
+
+## 결과 수신 콜백
+
+```kotlin
+Moment.setUIResultListener(object : MomentUIResultListener {
+    override fun onResult(result: MomentUIResult) {
+        // result.privacyConsent, result.marketingConsent 등 확인
+    }
+})
+```

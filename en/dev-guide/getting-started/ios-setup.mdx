@@ -1,0 +1,105 @@
+---
+title: "iOS Setup"
+---
+
+## Integrating with the SDK
+
+### Prerequisites
+
+Send the two items below to `eng@fairytech.ai`. After we finish project setup we'll reply with your `Project ID` and `SDK API Key`.
+
+- Development Bundle ID
+- Production Bundle ID
+
+### STEP 1) Configure Project ID and API Key (v1.1.4 or higher)
+
+You need to explicitly initialize the SDK by calling the `configure` function. We recommend calling it inside `AppDelegate`'s `didFinishLaunchingWithOptions` at app launch. (You only need to initialize before using the SDK.)
+
+<Note>
+  **Tip:** `configure` is a lightweight call that only sets internal environment variables—no server communication. It is safe to call at app launch without any impact on performance or crash risk.
+</Note>
+
+1. **(If needed) Remove Info.plist entries**<br />The keys previously registered in `Info.plist` are no longer used—remove them.
+   - `MomentApiKey`
+   - `MomentProjectId`
+2. **Call the Configure function** Before using `MomentCashbackService`, you must set your API Key and Project ID.
+   ```swift
+   import UIKit
+   import Moment // Import the SDK module
+   @main
+   class AppDelegate: UIResponder, UIApplicationDelegate {
+       func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+           
+           // [Required] Initialize the Moment SDK
+           // Enter the API Key and Project ID we issued.
+           MomentCashbackService.configure(
+               apiKey: "YOUR_API_KEY",
+               projectId: "YOUR_PROJECT_ID"
+           )
+           
+           // (Optional) You can branch key values by environment (debug/release).
+           /*
+           #if DEBUG
+           MomentCashbackService.configure(apiKey: "DEV_KEY", projectId: "DEV_ID")
+           #else
+           MomentCashbackService.configure(apiKey: "PROD_KEY", projectId: "PROD_ID")
+           #endif
+           */
+           return true
+       }
+   }
+   ```
+
+**Warning:** If you use other SDK features without calling `configure`, an initialization error can occur. Make sure to call it early in app startup.
+
+### STEP 2) Add the Moment Cashback Framework
+
+#### Swift Package Manager
+
+1. Sign in to GitHub in Xcode. (The repo isn't gated so any account works.)
+2. In File → Add Packages, enter the URL below.
+
+```ruby
+'<https://github.com/fairytech-external/Cashback-iOS>'
+```
+
+3. Set Dependency rule to **Up to Next Minor Version.**
+
+#### CocoaPods
+
+```ruby
+platform :ios, '14.0'
+use_frameworks!
+
+target 'CashbackDemo' do
+  pod 'Moment', :podspec => '<https://github.com/fairytech-external/Cashback-iOS/releases/download/${sdk_version}/Moment.podspec>'
+end
+```
+
+<Info>
+  The Cashback SDK is currently distributed by fetching from the GitHub repo, not via the public trunk.<br />If you need support for the public trunk-based CocoaPods, contact [eng@fairytech.ai](mailto:eng@fairytech.ai).
+</Info>
+
+(⬆️ sample Podfile)<br />`sdk_version` supports `1.1.3` and above.
+
+'Moment' is built as a static framework, so no additional steps are needed after `pod install`.
+
+#### xcframework direct import
+
+1. Download the code from [https://github.com/fairytech-external/Cashback-iOS](https://github.com/fairytech-external/Cashback-iOS).
+2. Place the downloaded `Moment.xcframework` into `App Source Root > Frameworks`.
+3. In General \> Frameworks, Libraries, and Embedded Contents, set `Moment.xcframework` to Embed & Sign.
+
+<Frame>
+  ![Image](/images/image-6.png)
+</Frame>
+
+4. In Targets \> Build Phases \> Link Binary With Libraries, confirm `Moment.xcframework` is marked Required.
+
+<Frame>
+  ![Image](/images/image-7.png)
+</Frame>
+
+## Integrating without the SDK
+
+Prepare the Project ID and Web API Key for the project you'll use. If you don't know the Project ID and Web API Key we sent you, you can find them in the console.

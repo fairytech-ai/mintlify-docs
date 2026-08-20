@@ -1,0 +1,68 @@
+---
+title: "캐시백 프로그램 목록을 외부에서 노출하기"
+---
+
+본 가이드는 **페어리 캐시백 웹 외부에서 캐시백 프로그램 정보를 노출**하고, 사용자가 프로그램 상세 페이지로 쉽게 유입될 수 있도록 돕는 방법을 설명합니다.
+
+## **Step 1) 캐시백 프로그램 목록 조회하기**
+
+- 캐시백 프로그램 정보는 SDK에서 제공하는 listCashback 메서드를 통해 가져올 수 있습니다.
+- listCashback(callback: ListCashbackResultCallback)
+  - `MomentCashbackService`
+
+## **Step 2) Callback 을 통해 결과 처리하기**
+
+- listCashback 호출 후, 결과는 onComplete의 success를 통해 전달됩니다.
+- 이곳에서 **캐시백 프로그램 목록 (CashbackProgram)** 데이터를 사용할 수 있습니다.
+  - `CashbackProgramType`
+
+### **외부 노출 시 활용 가능한 주요 데이터**
+
+- CashbackProgramType 객체에는 외부 UI에서 활용할 수 있는 다양한 정보가 포함되어 있습니다.<br />주요 필드는 다음과 같습니다.
+
+| 필드명 | 설명 | 예시 |
+| :-- | :-- | :-- |
+| businessId | 캐시백 프로그램을 운영하는 쇼핑몰의 고유 id |  |
+| businessName | 쇼핑몰의 노출용 이름 |  |
+| businessImageUrl | 쇼핑몰의 로고 이미지 |  |
+| products | 캐시백 프로그램의 대상 상품 목록 |  |
+| products\[index\].comission | 캐시백 상품의 커미션 정보.<br /><br />- amount \+ unit 조합<br /> | amount: `“2.5”`<br />unit: `PERCENTAGE_COMMISSION_UNIT` |
+
+<Frame>
+  ![Image](/images/image-6.png)
+</Frame>
+
+## **Step 3) 프로그램 상세 페이지로 이동시키기**
+
+- 사용자가 특정 캐시백 프로그램을 클릭했을 때, 해당 프로그램의 상세 페이지로 바로 이동할 수 있습니다.
+- setUserId 호출 시 businessId를 전달하여 **상세 페이지로 런딩**할 수 있습니다.
+- 구체적인 방법은 [1. 캐시백 웹 내 특정 페이지를 바로 제공하기](/ko/dev-guide/cashback/cashback-service/ios/route) 를 참고하세요.
+
+## **예시 코드**
+
+```swift
+MomentCashbackService.listCashback { result in
+    switch result {
+    case .success(let list):
+        for program in list {
+            let businessId = program.businessID
+            let name = program.businessName
+            let logoURL = program.businessImageURL
+            
+            // 최대 N% 할인! 표기를 위해서는 productsList 내의 아이템 중
+            // commission 이 가장 높은 데이터를 찾아 제공할 수도 있습니다.
+            let commission = program.products[0].commission?.amount
+            
+            // commission 단위
+            let commissionUnit = program.products[0].commission?.unit.rawValue
+            print(businessId, name, logoURL, commission, commissionUnit)
+        }
+        print("Callback: success")
+    case .failure(let error):
+        print("Error:", error.localizedDescription)
+        print("Callback: failure - \(error.localizedDescription)")
+    }
+}
+```
+
+---

@@ -1,0 +1,64 @@
+---
+title: "Integration"
+description: "Sigma integration and marketing-push opt-in setup"
+---
+
+<Tip>
+  Sigma has no consent concept and requires no `user_id`. The host app only passes its marketing-push opt-in status to the SDK.
+</Tip>
+
+## Prerequisites
+
+<Warning>
+  Complete [Getting Started \> Android Setup](/en/dev-guide/getting-started/setup) first.
+</Warning>
+
+## STEP 1) Call init at app launch
+
+Call `init` in `Application#onCreate`. Sigma-related data initialization happens as part of it.
+
+```kotlin
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        val moment = MomentSDK.getInstance(this)
+        moment.init(
+            config,
+            object : MomentSDK.RestartResultCallback {
+                override fun onSuccess(resultCode: MomentSDK.RestartResultCode) {}
+
+                override fun onFailure(exception: MomentException) {}
+            }
+        )
+    }
+}
+```
+
+## STEP 2) Pass the marketing-push opt-in status
+
+So the user's marketing-push opt-in status stays up to date, call `setMarketingPushEnabled` **at login and when entering the main screen**.
+
+```kotlin
+MomentSDK.getInstance(context).setMarketingPushEnabled(true) // opt-in status
+```
+
+<Tip>
+  This must be called at least once per user before that user can receive marketing notifications.
+</Tip>
+
+<Note>
+  The value is uploaded to the server only when it changes, so calling it repeatedly with the same value has no overhead.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Integration Testing" icon="vial" href="/en/dev-guide/sigma-targeting/integration-test">
+    Verify the integration works correctly.
+  </Card>
+
+  <Card title="Using X and Sigma Together" icon="layer-group" href="/en/dev-guide/x-with-sigma">
+    See the call sequence when used together with X.
+  </Card>
+</CardGroup>

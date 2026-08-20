@@ -1,0 +1,129 @@
+---
+title: "직접 연동하기 (start / stop)"
+description: "법적 동의를 직접 관리하는 고객사를 위한 연동 (동의 자체 관리형 · ConsentNone)"
+---
+
+<Tip>
+  이 가이드는 **동의 자체 관리형(ConsentNone)** 구성을 위한 가이드입니다.
+
+  서비스 이용에 필요한 법적 동의를 고객사가 자체 관리하고, SDK는 인식 서비스의 시작/종료만 담당합니다. `user_id` 설정이 필요 없습니다.
+</Tip>
+
+<Danger>
+  **페어리 UI(`launchUI`)를 앱 내에서 한 번이라도 이용**하는 프로젝트는 동의 화면 제공형 구성입니다. 이 가이드가 아니라 [동의 화면으로 연동하기](/ko/dev-guide/x/launch-ui)를 따라주세요.
+</Danger>
+
+## 사전 준비
+
+<Warning>
+  [시작하기 \> Android Setup](/ko/dev-guide/getting-started/setup) 을 먼저 완료하세요.
+</Warning>
+
+## STEP 1) 앱 시작 시점에 init 호출하기
+
+`Application#onCreate` 에서 `init` 을 호출합니다. `init` 은 SDK 기본 초기화를 수행하고, 인식 서비스가 비정상 종료됐던 경우(사용자의 앱 강제 종료 등) 서비스를 자동으로 재시작합니다.
+
+- `init(config, callback)` [method reference](/ko/api/android)
+
+```kotlin
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        val moment = MomentSDK.getInstance(this)
+        moment.init(
+            config,
+            object : MomentSDK.RestartResultCallback {
+                override fun onSuccess(resultCode: MomentSDK.RestartResultCode) {
+                    if (resultCode == MomentSDK.RestartResultCode.SERVICE_RESTARTED) {
+                        // 인식 서비스가 재시작되었습니다.
+                    }
+                }
+
+                override fun onFailure(exception: MomentException) {
+                    // 초기화/재시작에 실패했습니다.
+                }
+            }
+        )
+    }
+}
+```
+
+## STEP 2) 권한 요청하기
+
+**필요 권한 1: 사용정보 접근 (`PACKAGE_USAGE_STATS`)**
+
+인식 서비스를 시작하기 위해서는 사용자에게 사용정보 접근 허용 권한을 요청해야 합니다. 아래 예시 코드를 통해 권한을 요청할 수 있습니다. ([참고: 스타터 예시](https://github.com/fairytech-external/android-x-starter/blob/eedd27ba080e3581afacb165ea2f31dd601d9756/app/src/main/java/ai/fairytech/moment/sample/ui/main/BaseMainFragment.kt#L154))
+
+```kotlin
+val appUsagePermissionLauncher =
+  registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+      if (MomentSDK.isAppUsagePermissionGranted(requireContext())) {
+          // 권한 획득 성공
+      } else {
+          // 권한 획득 실패
+      }
+  }
+
+val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+intent.data = Uri.fromParts("package", packageName, null)
+appUsagePermissionLauncher.launch(intent)
+```
+
+**필요 권한 2: 알림 권한 (`POST_NOTIFICATIONS`)**
+
+- 인식 후 알림을 보내기 위한 시스템 알림 권한입니다. Android 13(API 33) 이상에서는 런타임으로 요청해야 합니다.
+- [알림 권한에 대한 가이드는 이 문서](https://developer.android.com/develop/ui/compose/notifications/notification-permission)를 참조해주세요.
+
+## STEP 3) 서비스 시작하기 (start)
+
+법적 동의가 완료된 사용자에 한해 `start(config, callback)` 를 호출해 인식 서비스를 시작합니다. ([참고: 스타터 예시](https://github.com/fairytech-external/android-x-starter/blob/a6a5cec4cc26c5dab9caa43026fcb251d53883e8/app/src/main/java/ai/fairytech/moment/sample/ui/main/BaseMainFragment.kt#L219))
+
+- `start(config, callback)` [method reference](/ko/api/android)
+
+```kotlin
+momentSdk.start(
+    momentSdkConfig,
+    object : MomentSDK.ResultCallback {
+        override fun onSuccess() {}
+
+        override fun onFailure(exception: MomentException) {}
+    }
+)
+```
+
+<Note>
+  `user_id` 설정 없이 `start` 를 호출할 수 있습니다. 고객사 사용자 식별자를 페어리에 전달하기로 계약된 경우에만 `start` 전에 `setUserId` 를 호출해주세요.
+</Note>
+
+## 서비스 종료하기 (stop)
+
+사용자가 서비스 이용을 중단하는 경우 `stop()` 을 호출해 인식 서비스를 종료합니다.
+
+```kotlin
+momentSdk.stop()
+```
+
+## 로그아웃 / 탈퇴 처리하기
+
+- **로그아웃 — 인식 서비스를 유지하는 경우 (기본 권장)**: 아무것도 호출하지 않아도 됩니다.
+- **로그아웃 — 인식 서비스를 종료하는 경우**: `wipeData()` 로 로컬 데이터를 삭제한 뒤 `stop()` 을 호출합니다.
+- **탈퇴**: `wipeData()` \+ `stop()` 을 호출합니다.
+
+```kotlin
+momentSdk.wipeData()
+momentSdk.stop()
+```
+
+## 다음 단계
+
+<CardGroup cols={2}>
+  <Card title="연동 테스트하기" icon="vial" href="/ko/dev-guide/x/qa">
+    연동이 올바르게 동작하는지 확인합니다.
+  </Card>
+
+  <Card title="X + Sigma 함께 쓰기" icon="layer-group" href="/ko/dev-guide/x-with-sigma">
+    구성 조합별 전체 호출 순서를 확인합니다.
+  </Card>
+</CardGroup>

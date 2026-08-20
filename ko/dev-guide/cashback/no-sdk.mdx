@@ -1,0 +1,201 @@
+---
+title: "(No-SDK) Swift 연동하기"
+---
+
+## Quickstarter
+
+아래 repository에서 예시 코드를 바로 확인해보실 수 있습니다.
+
+<Card title="iOS Cashback Web starter" icon="sparkles" href="https://github.com/fairytech-external/ios-cashback-web-starter">
+</Card>
+
+실제로 예시 코드 앱을 실행해보시려면, 앱의 bundle ID를 사용하실 프로젝트에 등록해주시기 바랍니다.
+
+## 사전 준비
+
+<Warning>
+  [Getting Started \> iOS Setup](/ko/dev-guide/getting-started/ios-setup) 을 먼저 완료하세요.
+</Warning>
+
+## 단계별 가이드
+
+### 1. 캐시백 웹 엔드포인트 & 쿼리 파라미터 확인하기
+
+**기본 URL**
+
+- `https://cashback-ui.moment.fairytech.ai/main`
+
+**지원되는 쿼리 파라미터**
+
+`redirect_to`: 캐시백 웹 내에서 리다이렉트 될 페이지의 경로이며 아래와 같은 페이지들을 지원합니다.
+
+<Tip>
+  아래 경로들을 반드시 인코딩 후 쿼리 파라미터로 전달해주셔야 합니다
+</Tip>
+
+| 페이지 | 경로 | 전체 url |
+| :-- | :-- | :-- |
+| 메인 페이지 | `/cashback?category=뷰티` | `https://cashback-ui.moment.fairytech.ai/main?redirect_to=%2Fcashback%3Fcategory%3D%EB%B7%B0%ED%8B%B0` |
+| 캐시백 프로그램 | `/cashback/detail?business_id=11st` | `https://cashback-ui.moment.fairytech.ai/main?redirect_to=%2Fcashback%2Fdetail%3Fbusiness_id%3D11st` |
+| 사용자 실적 내역 | `/cashback/transactions` | `https://cashback-ui.moment.fairytech.ai/main?redirect_to=%2Fcashback%2Ftransactions` |
+| 설정 | `/settings` | `https://cashback-ui.moment.fairytech.ai/main?redirect_to=%2Fsettings` |
+| CS 문의 접수 | `/cs` | `https://cashback-ui.moment.fairytech.ai/main?redirect_to=%2Fcs` |
+
+<Info>
+  지원되는 business\_id 리스트가 필요하신 경우, `eng@fairytech.ai`로 연락주시기 바랍니다.
+</Info>
+
+### 2. 웹뷰 설정하기
+
+앱 내에서 웹뷰로 캐시백 웹을 안전하게 로드하고, 네이티브–웹 간 통신을 원활히 하기 위한 필수 설정을 안내합니다.
+
+#### 1) 기본 설정
+
+```swift
+struct CashbackWebView: UIViewRepresentable {
+	...
+	func makeUIView(context: Context) -> WKWebView {
+		let config = WKWebViewConfiguration()
+		let preferences = WKPreferences()
+		
+		// 1) JS 팝업/새 창 허용
+    preferences.javaScriptCanOpenWindowsAutomatically = true
+    config.preferences = preferences
+    
+    // 2) 페이지 내 JS 실행 허용
+    config.defaultWebpagePreferences.allowsContentJavaScript = true
+    
+    // 3) DOM storage (localStorage / sessionStorage) 활성화
+    // WKWebView는 기본적으로 켜져 있지만, 웹킷 버전에 따라 동작이 다를 수 있어 명시적으로 설정
+    config.websiteDataStore = .default()
+    
+    // 4) 쿼키 공유 허용
+    // iOS14 이상에서는 default() 스토어가 쿼키를 자동으로 관리하지만,
+    // iOS13 이하를 지원해야 할 때는 수동으로 Cookie를 동기화해줘야 합니다.
+    let webView = WKWebView(frame: .zero, configuration: config)
+    let cookieStore = webView.configuration.websiteDataStore.httpCookieStore
+    // (예시) 저장된 쿼키 불러오기
+    HTTPCookieStorage.shared.cookies?.forEach { cookie in
+        cookieStore.setCookie(cookie)
+    }
+        
+		let webView = WKWebView(frame: .zero, configuration: config)
+		context.coordinator.webView = webView
+		context.coordinator.load(redirectTo: redirectTo)
+		webView.uiDelegate = context.coordinator
+    
+    return webView
+	}
+}
+```
+
+#### 2) 외부 링크 처리
+
+```swift
+struct CashbackWebView: UIViewRepresentable {
+	...
+	class Coordinator: NSObject, WKScriptMessageHandler, WKUIDelegate {
+		func webView(_ webView: WKWebView,
+								 createWebViewWith configuration: WKWebViewConfiguration,
+	               for navigationAction: WKNavigationAction,
+	               windowFeatures: WKWindowFeatures) -> WKWebView? {
+			guard let url = navigationAction.request.url else { return nil }
+	
+			if let host = url.host, host.contains(FAIRY_CASHBACK_DOMAIN) {
+				// 캐시백 도메인 내부 요청은 WebView 내에서 처리
+				return nil
+			} else {
+				// 그 외, 외부 링크는 기본 브라우저에서 열기
+				UIApplication.shared.open(url)
+				return nil
+			}
+		}
+	}
+}
+```
+
+- 🤔 왜 외부 링크를 따로 처리해야 하나요?
+  - 고객사 앱 안에 다른 외부 링크(광고, 파트너 페이지 등)가 포함될 수 있습니다.
+  - 외부 링크를 WebView에서 그대로 열면, 원치 않는 도메인에서 JS·쿼키를 공유하거나 피싱 위험이 있습니다.
+  - 따라서 **우리 도메인**만 WebView에서 렌더링하고, 나머지는 반드시 시스템 브라우저로 오픈하여 도메인 경계를 명확히 합니다.
+
+### 3. JavaScript Interface 구현하기 (`fairyCashbackBridge`)
+
+아래의 두 가지 bridge api를 **반드시** 구현해주셔야 합니다.
+
+```swift
+struct CashbackWebView: UIViewRepresentable {
+	...
+	func makeUIView(context: Context) -> WKWebView {
+		let config = WKWebViewConfiguration()
+		let controller = WKUserContentController()
+		...
+
+		// JS bridge: window.fairyCashbackBridge.finish() / reload(redirectTo)
+		let js = """
+			window.fairyCashbackBridge = {
+				finish: function() {
+					window.webkit.messageHandlers.finish.postMessage({});
+				},
+				reload: function(redirectTo) {
+					window.webkit.messageHandlers.reload.postMessage({redirectTo: redirectTo});
+				}
+			};
+		"""
+		controller.addUserScript(WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false))
+		controller.add(context.coordinator, name: "finish")
+		controller.add(context.coordinator, name: "reload")
+
+		config.userContentController = controller
+		...
+        
+		return webView
+	}
+	
+	class Coordinator: NSObject, WKScriptMessageHandler, WKUIDelegate {
+		...
+		func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+			if message.name == "finish" {
+				onFinish()
+			} else if message.name == "reload" {
+				let redirectTo = (message.body as? [String: Any])?["redirectTo"] as? String
+				load(redirectTo: redirectTo)
+			}
+		}
+		
+		func load(redirectTo: String? = nil) {
+			var components = URLComponents()
+			components.scheme = "https"
+			components.host   = FAIRY_CASHBACK_DOMAIN
+			components.path   = FAIRY_CASHBACK_PATH
+
+			if let redirectTo = redirectTo {
+				components.queryItems = [
+					URLQueryItem(name: "redirect_to", value: redirectTo)
+				]
+			}
+
+			guard let finalUrl = components.url else { return }
+			var request = URLRequest(url: finalUrl)
+            
+			request.setValue(userId, forHTTPHeaderField: "x-moment-user-id")
+			request.setValue(projectId, forHTTPHeaderField: "x-moment-project-id")
+			request.setValue(apiKey, forHTTPHeaderField: "x-moment-web-api-key")
+			request.setValue("IOS", forHTTPHeaderField: "x-moment-platform")
+
+			webView?.load(request)
+		}
+	}
+}
+```
+
+### 4. 웹뷰에서 캐시백 웹 url 열기
+
+`webView.load(request)` 로 페이지를 열 때, 아래 4개의 헤더를 **반드시** 추가해주셔야 합니다.
+
+| 헤더 이름 | 설명 |
+| :-- | :-- |
+| x-moment-project-id | Project ID (페어리 발급) |
+| x-moment-web-api-key | Web API Key (페어리 발급) |
+| x-moment-user-id | 캐시백 사용자 식별 |
+| x-moment-platform | IOS (호출 플랫폼 구분) |

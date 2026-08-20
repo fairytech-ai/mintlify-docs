@@ -1,0 +1,95 @@
+---
+title: "Product Overview"
+description: "Moment SDK products and key terminology"
+---
+
+**Moment SDK** detects the user's app-usage context (Moment) in real time so you can deliver messages at the most appropriate moment, and also supports interest-based audience targeting and payment-based cashback.
+
+## Products
+
+<CardGroup cols={3}>
+  <Card title="Real-time Targeting (X)" icon="bullseye" href="/en/dev-guide/x/intro">
+    Detects cross-app usage context and delivers messages at the right moment.
+  </Card>
+
+  <Card title="Audience Targeting (Sigma)" icon="chart-pie" href="/en/dev-guide/sigma-targeting/product-intro">
+    Classifies users by interest for audience targeting.
+  </Card>
+
+  <Card title="Cashback" icon="coins" href="/en/dev-guide/cashback/product-intro">
+    Automatically aggregates payment activity to run reward programs.
+  </Card>
+</CardGroup>
+
+### Real-time Targeting (X)
+
+- Recognizes the user's cross-app usage context on-device and delivers notifications at the most appropriate moment.
+- **Has a Consent concept** — the integration mode depends on who manages consent. See [Key terminology](#key-terminology) below.
+
+### Audience Targeting (Sigma)
+
+- Classifies users by interest/behavior for audience-targeting campaigns.
+- No consent concept. The host app only passes its **marketing-push opt-in status** via `setMarketingPushEnabled`.
+- No `user_id` required.
+
+### Cashback
+
+- Automatically aggregates payment activity to run cashback reward programs.
+- **Requires the X Consent-UI mode integration and a `user_id`.**
+
+## Key terminology
+
+These terms describe the X integration modes and are used throughout the docs.
+
+| Term | Internal name | Description |
+| :-- | :-- | :-- |
+| **Consent-UI mode** | ConsentUI | **Fairy manages** the legal consent required to use the service and collects it through Fairy's consent screen (`launchUI`). Requires a `user_id`. |
+| **Self-managed consent mode** | ConsentNone | **You (the host) manage** legal consent yourself; the SDK only exposes `start` / `stop` for the recognition service. No `user_id` required. |
+| **Consent API** | ConsentAPI | An optional add-on for Consent-UI mode that lets you **push consent collected in your own signup/settings flow** into the SDK. (`getConsent` / `setConsent`) |
+
+<Tip>
+  Not sure which setup fits your service? Walk through the decision tree in [Find Your Integration Setup](/en/dev-guide/getting-started/find-your-setup).
+</Tip>
+
+## Supported environments
+
+### Android
+
+- **Kotlin**: 1.9.10 or higher
+- **Java**: 8 or higher — The SDK is written against Java 8 syntax and APIs.
+- **minSdk**: 23 — The SDK runs on Android 6.0 (Marshmallow) or higher.
+- **compileSdk**: 35, **targetSdk**: 35 — Built and tested against Android 15 (API 35).
+
+#### Performance
+
+The Fairy SDK is designed to minimize performance and battery impact under everyday use.
+
+**🔋 Battery usage**
+
+- **Typical usage (one day of normal use)**
+  - Without SDK: 0% / With SDK: 0.3%
+- **Stress test (1 hour, target app auto-entered every 5 seconds)**
+  - Without SDK: 100% → 91% (9%)
+  - With SDK: 100% → 88% (12%)
+
+**📦 SDK size**
+
+- The SDK file size is approximately **2MB**.
+- The app size increase after importing the SDK may vary per app.
+
+### iOS
+
+- **Swift: 5 or higher** — Built with Swift Compiler 5, which is the version we guarantee stability on.
+- **Minimum Deployments: iOS 14.0 or higher** — The SDK runs on iOS 14 or higher.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Find Your Integration Setup" icon="map" href="/en/dev-guide/getting-started/find-your-setup">
+    Answer a few questions to determine the right setup for your service.
+  </Card>
+
+  <Card title="Android Setup" icon="screwdriver-wrench" href="/en/dev-guide/getting-started/setup">
+    Install and configure the SDK.
+  </Card>
+</CardGroup>

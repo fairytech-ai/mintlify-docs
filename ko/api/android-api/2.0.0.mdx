@@ -1,0 +1,251 @@
+---
+title: "v2.0.0"
+---
+
+# Class
+
+## `MomentSDK`
+
+```kotlin
+class MomentSDK {
+	@JvmStatic
+	fun getInstance(context: Context): MomentSDK
+
+	// Lifecycle
+	fun start(config: Config, callback: ResultCallback)
+	fun stop(callback: ResultCallback)
+	fun init(config: Config, callback: RestartResultCallback)
+	fun isRunning(): Boolean
+
+	// UI
+	@JvmOverloads
+	fun launchUI(config: Config, callback: ResultCallback, finishCallback: UiFinishCallback? = null)
+	@JvmOverloads
+	fun launchUI(config: Config, redirectTo: String, callback: ResultCallback, finishCallback: UiFinishCallback? = null)
+	fun dismissUI(callback: ResultCallback)
+
+	// User
+	fun setUserId(userId: String, callback: ResultCallback)
+	fun getUserId(): String
+	fun setAdId(adId: String, isAdTrackingEnabled: Boolean, callback: ResultCallback)
+	fun setUserAttributes(userAttributes: UserAttributes, callback: ResultCallback)
+	fun setSendBubble(sendBubble: Boolean)
+
+	// Consent
+	fun getConsent(callback: CallbackWithResult<UserConsent>)
+	fun setConsent(request: SubmitUserConsentRequest, callback: CallbackWithResult<SubmitUserConsentResponse>)
+	fun withdraw(callback: ResultCallback)
+
+	// Cashback
+	fun listCashback(callback: ListCashbackResultCallback)
+	fun goToCashback(businessId: String, callback: ResultCallback)
+
+	// Project / API key
+	fun setProjectId(projectId: String)
+	fun setApiKey(apiKey: String)
+	fun getProjectId(appContext: Context): String
+	fun getApiKey(appContext: Context): String
+
+	// Permission utils
+	@JvmStatic
+	fun isAppUsagePermissionGranted(context: Context): Boolean
+	@JvmStatic
+	fun isVpnPermissionGranted(context: Context): Boolean
+	@JvmStatic
+	fun isNotificationPermissionGranted(context: Context): Boolean
+}
+```
+
+주요 메서드에 대한 상세한 설명과 사용법은 v2.0.2 기준의 [Android API](/ko/api/android) 문서와 동일합니다. `start`, `stop`, `init`, `launchUI`, `dismissUI`, `setUserId`, `setUserAttributes`, `setConsent`, `getConsent`, `withdraw`, `listCashback`, `goToCashback` 등의 메서드가 지원됩니다.
+
+## `MomentSDK.Config`
+
+```kotlin
+class Config : Serializable {
+	constructor()
+	constructor(appContext: Context)
+
+	fun notificationChannelId(notificationChannelId: String): Config
+	fun notificationId(notificationId: Int): Config
+	fun notificationIconResId(notificationIconResId: Int): Config
+
+	fun serviceNotificationChannelId(serviceNotificationChannelId: String): Config
+	fun serviceNotificationId(serviceNotificationId: Int): Config
+	fun serviceNotificationIconResId(serviceNotificationIconResId: Int): Config
+	fun serviceNotificationIconColorInt(@ColorInt serviceNotificationIconColorInt: Int): Config
+	fun serviceNotificationTitle(serviceNotificationTitle: String): Config
+	fun serviceNotificationText(serviceNotificationText: String): Config
+	fun serviceNotificationLinkUrl(serviceNotificationLinkUrl: String): Config
+
+	fun hideServiceNotification(hideServiceNotification: Boolean): Config
+}
+```
+
+Config 클래스는 builder pattern으로 인스턴스를 구성합니다. `notificationChannelId`로 넘겨주는 알림 채널을 생성할 때, importance를 `IMPORTANCE_HIGH` 이상으로 설정해주셔야 합니다.
+
+## `MomentException`
+
+```kotlin
+class MomentException(val errorCode: ErrorCode, errorMessage: String) : Exception(errorMessage)
+```
+
+## `UserAttributes`
+
+```kotlin
+class UserAttributes private constructor(
+	val gender: Gender?,
+	val birthYear: Int?,
+) {
+	class Builder {
+		fun gender(value: Gender): Builder
+		fun birthYear(value: Int): Builder
+		fun build(): UserAttributes
+	}
+}
+```
+
+# Enum
+
+## `ErrorCode`
+
+```kotlin
+enum class ErrorCode {
+	API_NOT_ACTIVATED, APP_USAGE_PERMISSION_REQUIRED, VPN_PERMISSION_REQUIRED,
+	NETWORK_CONNECTION_REQUIRED, SERVICE_START_FAILED, SERVICE_STOP_FAILED,
+	SERVICE_ALREADY_STARTING, PROJECT_ID_REQUIRED, API_KEY_REQUIRED,
+	GET_SIGNING_KEY_FAILED, AUTHENTICATION_FAILED, EMPTY_USER_ID,
+	EMPTY_CASHBACK_BUSINESS_ID, INVALID_CONFIG, INVALID_USER_ATTRIBUTES,
+	CASHBACK_NOT_FOUND, TOO_MANY_REQUESTS, TEMPORARY_SERVER_ERROR,
+	ERROR_OCCURRED, EMPTY_DEVICE_TOKEN, PUSH_NOT_SUPPORTED,
+}
+```
+
+## `Gender`
+
+```kotlin
+enum class Gender { MALE, FEMALE }
+```
+
+## `MomentSDK.RestartResultCode`
+
+```kotlin
+enum class RestartResultCode {
+	SERVICE_SHOULD_NOT_BE_RUNNING,
+	SERVICE_ALREADY_RUNNING,
+	SERVICE_RESTARTED,
+}
+```
+
+# Callback
+
+## `MomentSDK.CallbackWithResult<T>` / `ResultCallback` / `UiFinishCallback` / `RestartResultCallback` / `ListCashbackResultCallback`
+
+```kotlin
+interface CallbackWithResult<T> {
+	fun onSuccess(result: T)
+	fun onFailure(exception: MomentException)
+}
+
+interface ResultCallback {
+	fun onSuccess()
+	fun onFailure(exception: MomentException)
+}
+
+interface UiFinishCallback {
+	fun onFinish()
+}
+
+interface RestartResultCallback {
+	fun onSuccess(resultCode: RestartResultCode)
+	fun onFailure(exception: MomentException)
+}
+
+interface ListCashbackResultCallback {
+	fun onSuccess(cashbackPrograms: List<CashbackProgram>)
+	fun onFailure(exception: MomentException)
+}
+```
+
+# Data
+
+## `UserConsent`
+
+```kotlin
+class UserConsent(items: List<ConsentItem>) {
+	val items: List<ConsentItem>
+	fun isGranted(code: String): Boolean?
+}
+
+data class ConsentItem(
+	val code: String,
+	val isGranted: Boolean,
+)
+```
+
+지원되는 consent item code:
+
+- `TERMS_OF_SERVICE` — 서비스 이용 약관
+- `PERSONAL_INFO` — 개인정보 수집/이용
+- `MARKETING_PUSH` — 마케팅 정보 수신
+- `MARKETING_PERSONAL_INFO` — 마케팅 활용을 위한 개인정보 처리
+- `NIGHTTIME_PUSH` — 야간 알림 수신
+- `PARTNER_THIRD_PARTY_PROVISION` — 제3자 제공 동의 (파트너)
+
+## `SubmitUserConsentRequest`
+
+```kotlin
+class SubmitUserConsentRequest {
+	val items: List<ConsentItemValue>
+	val withdrawAll: Boolean
+}
+```
+
+객체는 다음과 같이 builder를 통해 생성합니다.
+
+```kotlin
+val request = SubmitUserConsentRequest.newBuilder()
+	.addItems(ConsentItemValue.newBuilder()
+		.setItemCode("TERMS_OF_SERVICE")
+		.setIsGranted(true)
+		.build())
+	.addItems(ConsentItemValue.newBuilder()
+		.setItemCode("PERSONAL_INFO")
+		.setIsGranted(true)
+		.build())
+	.build()
+```
+
+- `items` 에 명시한 동의 항목만 서버에 upsert됩니다 (항목별 부분 업데이트 가능).
+- `withdrawAll=true` 로 설정하면 items 는 무시되고 모든 동의 항목이 일괄 철회됩니다.
+
+## `SubmitUserConsentResponse`
+
+```kotlin
+class SubmitUserConsentResponse {
+	val items: List<ConsentItemValue>
+}
+```
+
+## `ConsentItemValue`
+
+```kotlin
+class ConsentItemValue {
+	val itemCode: String
+	val isGranted: Boolean
+}
+```
+
+proto 응답에서는 false가 "비동의"를 의미합니다. "답변 안 함" 상태는 proto에 별도로 표현되지 않고, 응답의 items 리스트에 해당 code가 포함되지 않는 형태로 전달됩니다.
+
+## `CashbackProgram`
+
+```kotlin
+class CashbackProgram {
+	val businessId: String
+	val businessName: String
+	val businessImageUrl: String
+	val url: String
+	val programName: String
+	val productsList: List<CashbackProduct>
+}
+```

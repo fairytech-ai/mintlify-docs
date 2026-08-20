@@ -1,0 +1,31 @@
+---
+title: "UI Theme setup (Android)"
+description: "Customize the Fairy UI theme"
+---
+
+You can adjust the theme of the Fairy UI screens opened via `launchUI` (consent screen, cashback web, etc.) to match your app.
+
+## Change the status bar color
+
+<Frame>
+  <img
+    src="/images/image.png"
+    alt="Image"
+    title="Image"
+    style={{ width:"36%" }}
+  />
+</Frame>
+
+To customize the top status bar color (the area outlined in red) on screens rendered by the Fairy UI, add the `momentCashbackStatusBarColor` style attribute to your app's `themes.xml`.
+
+```xml
+// themes.xml
+<resources>
+    <style name="AppTheme" parent="...">
+        ...
+        <item name="momentCashbackStatusBarColor">@color/custom_color</item>
+    </style>
+</resources>
+```
+
+Without a custom style attribute, the status bar uses the same color as your app's status bar.

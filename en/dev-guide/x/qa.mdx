@@ -1,0 +1,77 @@
+---
+title: "Integration Testing"
+description: "Post-integration testing guide"
+---
+
+## Checklist
+
+<Steps>
+  <Step title="Verify SDK initialization">
+    Right after app launch, check the logs to confirm `Moment.init` was called successfully.
+  </Step>
+  <Step title="Start the service">
+    After calling `Moment.start(context)`, verify logcat prints `Moment recognition started`.
+  </Step>
+  <Step title="Is the service on?">
+    Once the recognition service is active, a foreground-service notification appears in the status bar.
+
+    - Note: dismissing this notification does not stop the recognition service.
+      <Frame>
+        ![Image](/images/image-11.png)
+      </Frame>
+
+    <Frame>
+    </Frame>
+  </Step>
+  <Step title="Is it active in background services?">
+    If the app appears among Android's running background services, the service is on.
+
+    <Frame>
+      ![Image](/images/image-10.png)
+    </Frame>
+
+    <Frame>
+    </Frame>
+  </Step>
+  <Step title="Are real-time notifications arriving?">
+    Once the service is confirmed running, it's time to test real-time notifications. Verify notifications arrive properly for the enabled shopping apps.
+
+    **How to test**
+
+    - For smooth QA, we recommend testing with the shopping apps below.
+      - Gmarket — within 10 seconds of entering
+      - Coupang — within 10 seconds of entering
+
+    <Frame>
+      ![Image](/images/image-9.png)
+    </Frame>
+
+    <Frame>
+    </Frame>
+  </Step>
+</Steps>
+
+## Common issues
+
+<AccordionGroup>
+  <Accordion title="The service won't start">
+    In Settings \> Apps \> Special access \> Usage access, make sure the permission is granted. If `Moment.isRunning(context)` returns `false`, the service won't proceed.
+
+    <Frame>
+      ![Image](/images/image-8.png)
+    </Frame>
+  </Accordion>
+
+  <Accordion title="The service is on but no notifications arrive">
+    - Cause 1: Notification permission
+      - Verify the app has the notification permission granted.
+    - Cause 2: Snooze
+      - To prevent notification fatigue, a snooze (~12 hours) is applied.
+      - Check whether you received the same notification (same app moment \+ same content) recently.
+      - To reset snooze: clear the app's data. (Except Coupang.)
+    - Cause 3: The entered app is not configured in the console
+      - Notifications only fire for entry points configured in the console.
+    - \[When using Fairy's legal consent\] Cause 4: Missing required legal consents
+      - Check that all consents required to receive notifications have been granted.
+  </Accordion>
+</AccordionGroup>

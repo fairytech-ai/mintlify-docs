@@ -1,0 +1,129 @@
+---
+title: "Direct integration (start / stop)"
+description: "Integration for hosts that manage legal consent themselves (self-managed consent mode · ConsentNone)"
+---
+
+<Tip>
+  This guide is for the **self-managed consent mode (ConsentNone)** setup.
+
+  You manage the legal consent required to use the service, and the SDK only handles starting/stopping the recognition service. No `user_id` required.
+</Tip>
+
+<Danger>
+  If your project uses **Fairy's UI (`launchUI`) even once inside the app**, you are in Consent-UI mode. Follow [Integrate with the Consent UI](/en/dev-guide/x/launch-ui) instead of this guide.
+</Danger>
+
+## Prerequisites
+
+<Warning>
+  Complete [Getting Started \> Android Setup](/en/dev-guide/getting-started/setup) first.
+</Warning>
+
+## STEP 1) Call init at app launch
+
+Call `init` in `Application#onCreate`. `init` performs base SDK initialization, and automatically restarts the recognition service if it was terminated abnormally (e.g., the user force-quit the app).
+
+- `init(config, callback)` [method reference](/en/api/android)
+
+```kotlin
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        val moment = MomentSDK.getInstance(this)
+        moment.init(
+            config,
+            object : MomentSDK.RestartResultCallback {
+                override fun onSuccess(resultCode: MomentSDK.RestartResultCode) {
+                    if (resultCode == MomentSDK.RestartResultCode.SERVICE_RESTARTED) {
+                        // The recognition service was restarted.
+                    }
+                }
+
+                override fun onFailure(exception: MomentException) {
+                    // Initialization/restart failed.
+                }
+            }
+        )
+    }
+}
+```
+
+## STEP 2) Request permissions
+
+**Required permission 1: App-Usage access (`PACKAGE_USAGE_STATS`)**
+
+To start the recognition service you need to ask the user for the App-Usage access permission. Use the example below to request it. (See: [Starter example](https://github.com/fairytech-external/android-x-starter/blob/eedd27ba080e3581afacb165ea2f31dd601d9756/app/src/main/java/ai/fairytech/moment/sample/ui/main/BaseMainFragment.kt#L154))
+
+```kotlin
+val appUsagePermissionLauncher =
+  registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+      if (MomentSDK.isAppUsagePermissionGranted(requireContext())) {
+          // Permission granted
+      } else {
+          // Permission denied
+      }
+  }
+
+val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+intent.data = Uri.fromParts("package", packageName, null)
+appUsagePermissionLauncher.launch(intent)
+```
+
+**Required permission 2: Notification permission (`POST_NOTIFICATIONS`)**
+
+- The system notification permission is required to send notifications after recognition. Must be requested at runtime on Android 13 (API 33) or above.
+- See [this doc](https://developer.android.com/develop/ui/compose/notifications/notification-permission) for guidance on the notification permission.
+
+## STEP 3) Start the service (start)
+
+For users who have completed the legally required consents, call `start(config, callback)` to start the recognition service. (See: [Starter example](https://github.com/fairytech-external/android-x-starter/blob/a6a5cec4cc26c5dab9caa43026fcb251d53883e8/app/src/main/java/ai/fairytech/moment/sample/ui/main/BaseMainFragment.kt#L219))
+
+- `start(config, callback)` [method reference](/en/api/android)
+
+```kotlin
+momentSdk.start(
+    momentSdkConfig,
+    object : MomentSDK.ResultCallback {
+        override fun onSuccess() {}
+
+        override fun onFailure(exception: MomentException) {}
+    }
+)
+```
+
+<Note>
+  `start` can be called without a `user_id`. Only call `setUserId` before `start` if your contract includes passing a customer user identifier to Fairy.
+</Note>
+
+## Stop the service (stop)
+
+When the user opts out of the service, call `stop()` to stop the recognition service.
+
+```kotlin
+momentSdk.stop()
+```
+
+## Handling logout / account deletion
+
+- **Logout — keeping the recognition service running (recommended default)**: No calls needed.
+- **Logout — stopping the recognition service**: Call `wipeData()` to clear local data, then call `stop()`.
+- **Account deletion**: Call `wipeData()` \+ `stop()`.
+
+```kotlin
+momentSdk.wipeData()
+momentSdk.stop()
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Integration Testing" icon="vial" href="/en/dev-guide/x/qa">
+    Verify the integration works correctly.
+  </Card>
+
+  <Card title="Using X and Sigma Together" icon="layer-group" href="/en/dev-guide/x-with-sigma">
+    See the full call sequence for each setup combination.
+  </Card>
+</CardGroup>

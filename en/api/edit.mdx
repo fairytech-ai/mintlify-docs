@@ -1,0 +1,97 @@
+---
+title: "Adjustments history API"
+---
+
+API to query adjustment amounts (separate from confirmed earnings) that were paid per user.
+
+At settlement time, combine this API's `adjustmentAmount` with the confirmed-earnings V2 API's `confirmedAmount` to compute the final settlement amount.
+
+\[GET\] [https://api.public.moment.fairytech.ai/organization](https://api.public.moment.fairytech.ai/organization/`:organizationPublicId`/adjustments)`:organizationPublicId`[/adjustments](https://api.public.moment.fairytech.ai/organization/`:organizationPublicId`/adjustments)
+
+### Request headers
+
+| Header | Required | Description |
+| :-- | :-- | :-- |
+| x-moment-api-key | O | API server auth key |
+
+### Path parameters
+
+| Parameter | Type | Description | Required | Default |
+| :-- | :-- | :-- | :-- | :-- |
+| organizationPublicId | string | Host ID | O | - |
+
+### Query string
+
+| Parameter | Type | Description | Required | Default |
+| :-- | :-- | :-- | :-- | :-- |
+| year | number | Year to query (YYYY) | O | - |
+| month | number | Month to query (1-12) | O | - |
+| page | number | Page number | X | 1 |
+| limit | number | Rows per page (1–100) | X | 100 |
+| user\_id | string | Single user ID to query | X | - |
+
+If you pass `user_id`, only that user's adjustment history is returned.
+
+### Request example
+
+```json
+GET <https://api.public.moment.fairytech.ai/organization/fairy/adjustments?year=2025&month=3&page=1&limit=20>
+```
+
+### Response data
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| totalCount | number | Total row count |
+| totalPage | number | Total page count |
+| currentPage | number | Current page number |
+| adjustmentItems | `adjustmentItem`\[\] | Adjustment rows |
+
+- `adjustmentItem` structure
+  | Field | Type | Description |
+  | :-- | :-- | :-- |
+  | userId | string | User ID |
+  | adjustmentAmount | number | User's net adjustment amount |
+  - We return the net amount (sum of adjustments paid minus recovered) per user, sorted ascending by userId.
+  - Positive `adjustmentAmount` means additional payout; negative means recovery outweighed the payout.
+
+### Response example
+
+```json
+{
+  "totalCount": 3,
+  "totalPage": 1,
+  "currentPage": 1,
+  "adjustmentItems": [
+    {
+      "userId": "USER-123",
+      "adjustmentAmount": 500
+    },
+    {
+      "userId": "USER-456",
+      "adjustmentAmount": 1200
+    },
+    {
+      "userId": "USER-789",
+      "adjustmentAmount": 300
+    }
+  ]
+}
+```
+
+### Error responses
+
+| HTTP Status | Condition |
+| :-- | :-- |
+| 400 Bad Request | year, month missing / page \< 1 / limit \< 1 |
+| 403 Forbidden | Feature not enabled for the organization |
+
+## Error Codes
+
+| HTTP | Code | Description |
+| :-- | :-- | :-- |
+| 400 | `INVALID_REQUEST` | Required field missing / format error |
+| 401 | `UNAUTHORIZED` | Bad API key |
+| 409 | `DUPLICATE_TRANSACTION` | The same `transactionId` already exists |
+| 422 | `INVALID_AMOUNT` | Invalid amount/currency combination |
+| 500 | `INTERNAL_ERROR` | Server error; retry required |

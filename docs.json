@@ -1,0 +1,436 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Fairy Moment",
+  "colors": {
+    "primary": "#6428e8",
+    "light": "#667ffa",
+    "dark": "#130280"
+  },
+  "favicon": {
+    "light": "/images/FairySignatureLogo_big.svg",
+    "dark": "/images/FairySignatureLogo_big.svg"
+  },
+  "navigation": {
+    "languages": [
+      {
+        "language": "ko",
+        "default": true,
+        "tabs": [
+          {
+            "tab": "Developer Guide",
+            "pages": [
+              "ko/index",
+              {
+                "group": "시작하기",
+                "pages": [
+                  "ko/dev-guide/getting-started/overview",
+                  "ko/dev-guide/getting-started/find-your-setup",
+                  "ko/dev-guide/getting-started/setup",
+                  "ko/dev-guide/getting-started/ios-setup"
+                ]
+              },
+              {
+                "group": "실시간 타겟팅 (X)",
+                "pages": [
+                  "ko/dev-guide/x/intro",
+                  "ko/dev-guide/x/quickstart-sample-app",
+                  {
+                    "group": "동의 화면으로 연동하기 (launchUI)",
+                    "pages": [
+                      "ko/dev-guide/x/launch-ui",
+                      "ko/dev-guide/x/consent-api",
+                      "ko/dev-guide/x/ui-theme"
+                    ]
+                  },
+                  "ko/dev-guide/x/direct",
+                  "ko/dev-guide/x/qa"
+                ]
+              },
+              {
+                "group": "모수 타겟팅 (Sigma)",
+                "pages": [
+                  "ko/dev-guide/sigma-targeting/product-intro",
+                  "ko/dev-guide/sigma-targeting/setup",
+                  "ko/dev-guide/sigma-targeting/integration-test"
+                ]
+              },
+              "ko/dev-guide/x-with-sigma",
+              {
+                "group": "공통 기능",
+                "pages": [
+                  "ko/dev-guide/common/notification-broadcast",
+                  "ko/dev-guide/common/fcm",
+                  "ko/dev-guide/common/fcm-2"
+                ]
+              },
+              {
+                "group": "Cashback",
+                "pages": [
+                  "ko/dev-guide/cashback/product-intro",
+                  "ko/dev-guide/cashback/quickstart-sample-app",
+                  {
+                    "group": "SDK 연동",
+                    "pages": [
+                      "ko/dev-guide/cashback/android",
+                      "ko/dev-guide/cashback/ios"
+                    ]
+                  },
+                  {
+                    "group": "No-SDK 연동",
+                    "pages": [
+                      "ko/dev-guide/cashback/no-sdk",
+                      "ko/dev-guide/cashback/no-sdk-objective-c"
+                    ]
+                  },
+                  "ko/dev-guide/cashback/server",
+                  {
+                    "group": "앱 내 진입점 구성",
+                    "pages": [
+                      {
+                        "group": "iOS",
+                        "pages": [
+                          "ko/dev-guide/cashback/cashback-service/ios/route",
+                          "ko/dev-guide/cashback/cashback-service/ios/programs"
+                        ]
+                      },
+                      {
+                        "group": "Android",
+                        "pages": [
+                          "ko/dev-guide/cashback/cashback-service/route",
+                          "ko/dev-guide/cashback/cashback-service/programs"
+                        ]
+                      }
+                    ]
+                  },
+                  "ko/dev-guide/cashback/integration-test"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "API Reference",
+            "groups": [
+              {
+                "group": "Android API",
+                "pages": [
+                  "ko/api/android",
+                  {
+                    "group": "과거 버전 - API 문서",
+                    "pages": [
+                      "ko/api/android-api/2.0.0",
+                      "ko/api/android-api/1.3.0"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Server API",
+                "pages": [
+                  "ko/api/server",
+                  "ko/api/settlement",
+                  "ko/api/edit",
+                  "ko/api/db-schema",
+                  "ko/api/deprecated-server"
+                ]
+              },
+              {
+                "group": "iOS API",
+                "pages": [
+                  "ko/api/ios"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "운영가이드",
+            "groups": [
+              {
+                "group": "Console",
+                "pages": [
+                  "ko/ops/console/campaign",
+                  "ko/ops/console/notifications",
+                  "ko/ops/console/dashboard"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "en",
+        "tabs": [
+          {
+            "tab": "Developer Guide",
+            "pages": [
+              "en/index",
+              {
+                "group": "Getting Started",
+                "pages": [
+                  "en/dev-guide/getting-started/overview",
+                  "en/dev-guide/getting-started/find-your-setup",
+                  "en/dev-guide/getting-started/setup",
+                  "en/dev-guide/getting-started/ios-setup"
+                ]
+              },
+              {
+                "group": "Real-time Targeting (X)",
+                "pages": [
+                  "en/dev-guide/x/intro",
+                  "en/dev-guide/x/quickstart-sample-app",
+                  {
+                    "group": "Integrate with the Consent UI (launchUI)",
+                    "pages": [
+                      "en/dev-guide/x/launch-ui",
+                      "en/dev-guide/x/consent-api",
+                      "en/dev-guide/x/ui-theme"
+                    ]
+                  },
+                  "en/dev-guide/x/direct",
+                  "en/dev-guide/x/qa"
+                ]
+              },
+              {
+                "group": "Audience Targeting (Sigma)",
+                "pages": [
+                  "en/dev-guide/sigma-targeting/product-intro",
+                  "en/dev-guide/sigma-targeting/setup",
+                  "en/dev-guide/sigma-targeting/integration-test"
+                ]
+              },
+              "en/dev-guide/x-with-sigma",
+              {
+                "group": "Common Features",
+                "pages": [
+                  "en/dev-guide/common/notification-broadcast",
+                  "en/dev-guide/common/fcm"
+                ]
+              },
+              {
+                "group": "Cashback",
+                "pages": [
+                  "en/dev-guide/cashback/product-intro",
+                  "en/dev-guide/cashback/quickstart-sample-app",
+                  {
+                    "group": "SDK Integration",
+                    "pages": [
+                      "en/dev-guide/cashback/android",
+                      "en/dev-guide/cashback/ios"
+                    ]
+                  },
+                  {
+                    "group": "No-SDK Integration",
+                    "pages": [
+                      "en/dev-guide/cashback/no-sdk",
+                      "en/dev-guide/cashback/no-sdk-objective-c"
+                    ]
+                  },
+                  "en/dev-guide/cashback/server",
+                  {
+                    "group": "In-App Entry Points",
+                    "pages": [
+                      {
+                        "group": "iOS",
+                        "pages": [
+                          "en/dev-guide/cashback/cashback-service/ios/route",
+                          "en/dev-guide/cashback/cashback-service/ios/programs"
+                        ]
+                      },
+                      {
+                        "group": "Android",
+                        "pages": [
+                          "en/dev-guide/cashback/cashback-service/route",
+                          "en/dev-guide/cashback/cashback-service/programs"
+                        ]
+                      }
+                    ]
+                  },
+                  "en/dev-guide/cashback/integration-test"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "API Reference",
+            "groups": [
+              {
+                "group": "Android API",
+                "pages": [
+                  "en/api/android",
+                  {
+                    "group": "Previous Versions - API Docs",
+                    "pages": [
+                      "en/api/android-api/2.0.0",
+                      "en/api/android-api/1.3.0"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Server API",
+                "pages": [
+                  "en/api/server",
+                  "en/api/settlement",
+                  "en/api/edit",
+                  "en/api/db-schema",
+                  "en/api/deprecated-server"
+                ]
+              },
+              {
+                "group": "iOS API",
+                "pages": [
+                  "en/api/ios"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Operations Guide",
+            "groups": [
+              {
+                "group": "Console",
+                "pages": [
+                  "en/ops/console/campaign",
+                  "en/ops/console/notifications",
+                  "en/ops/console/dashboard"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/images/FairyLogotype_TransparentFit_BK.svg",
+    "dark": "/images/FairyLogotype_TransparentFit_WH.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:eng@fairytech.ai"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Console",
+      "href": "https://console.fairytech.ai"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/fairytech-external"
+    }
+  },
+  "redirects": [
+    {
+      "source": "/ko/dev-guide/getting-started/must-read-guide",
+      "destination": "/ko/dev-guide/getting-started/overview"
+    },
+    {
+      "source": "/ko/dev-guide/x/start-with-ui",
+      "destination": "/ko/dev-guide/x/launch-ui"
+    },
+    {
+      "source": "/ko/dev-guide/x/start-service",
+      "destination": "/ko/dev-guide/x/direct"
+    },
+    {
+      "source": "/ko/dev-guide/advanced/consent-api",
+      "destination": "/ko/dev-guide/x/consent-api"
+    },
+    {
+      "source": "/ko/dev-guide/cashback/theme",
+      "destination": "/ko/dev-guide/x/ui-theme"
+    },
+    {
+      "source": "/ko/dev-guide/x-realtime-ads/start-recognition/file-1",
+      "destination": "/ko/dev-guide/common/notification-broadcast"
+    },
+    {
+      "source": "/ko/dev-guide/cashback/cashback-service/fcm",
+      "destination": "/ko/dev-guide/common/fcm"
+    },
+    {
+      "source": "/ko/dev-guide/sigma-targeting/sigma-setup",
+      "destination": "/ko/dev-guide/sigma-targeting/setup"
+    },
+    {
+      "source": "/ko/dev-guide/sigma-targeting/file",
+      "destination": "/ko/dev-guide/sigma-targeting/integration-test"
+    },
+    {
+      "source": "/ko/dev-guide/cashback/file",
+      "destination": "/ko/dev-guide/cashback/android"
+    },
+    {
+      "source": "/ko/dev-guide/cashback/i-os",
+      "destination": "/ko/dev-guide/cashback/ios"
+    },
+    {
+      "source": "/ko/dev-guide/cashback/file-1",
+      "destination": "/ko/dev-guide/cashback/integration-test"
+    },
+    {
+      "source": "/en/dev-guide/getting-started/must-read-guide",
+      "destination": "/en/dev-guide/getting-started/overview"
+    },
+    {
+      "source": "/en/dev-guide/x/start-with-ui",
+      "destination": "/en/dev-guide/x/launch-ui"
+    },
+    {
+      "source": "/en/dev-guide/x/start-service",
+      "destination": "/en/dev-guide/x/direct"
+    },
+    {
+      "source": "/en/dev-guide/advanced/consent-api",
+      "destination": "/en/dev-guide/x/consent-api"
+    },
+    {
+      "source": "/en/dev-guide/cashback/theme",
+      "destination": "/en/dev-guide/x/ui-theme"
+    },
+    {
+      "source": "/en/dev-guide/x-realtime-ads/start-recognition/file-1",
+      "destination": "/en/dev-guide/common/notification-broadcast"
+    },
+    {
+      "source": "/en/dev-guide/cashback/cashback-service/fcm",
+      "destination": "/en/dev-guide/common/fcm"
+    },
+    {
+      "source": "/en/dev-guide/sigma-targeting/sigma-setup",
+      "destination": "/en/dev-guide/sigma-targeting/setup"
+    },
+    {
+      "source": "/en/dev-guide/sigma-targeting/file",
+      "destination": "/en/dev-guide/sigma-targeting/integration-test"
+    },
+    {
+      "source": "/en/dev-guide/cashback/file",
+      "destination": "/en/dev-guide/cashback/android"
+    },
+    {
+      "source": "/en/dev-guide/cashback/file-1",
+      "destination": "/en/dev-guide/cashback/integration-test"
+    },
+    {
+      "source": "/en/dev-guide/cashback/i-os",
+      "destination": "/en/dev-guide/cashback/ios"
+    }
+  ]
+}

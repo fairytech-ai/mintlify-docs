@@ -1,0 +1,188 @@
+---
+title: "동의 화면으로 연동하기 (launchUI)"
+sidebarTitle: "연동하기"
+description: "페어리가 제공하는 동의 화면으로 X 서비스 시작하기 (동의 화면 제공형 · ConsentUI)"
+---
+
+<Tip>
+  이 가이드는 **동의 화면 제공형(ConsentUI)** 구성을 위한 가이드입니다.
+
+  법적 동의가 페어리를 통해 관리되며, 페어리가 제공하는 동의/설정 화면(`launchUI`)에서 동의를 수집합니다. 마케팅 수신 동의를 얻은 사용자에게만 광고 알림이 발송됩니다.
+
+  내 구성이 맞는지 모르겠다면 [내 연동 구성 찾기](/ko/dev-guide/getting-started/find-your-setup)를 먼저 확인하세요.
+</Tip>
+
+## 사전 준비
+
+<Warning>
+  [시작하기 \> Android Setup](/ko/dev-guide/getting-started/setup) 을 먼저 완료하세요.
+</Warning>
+
+동의 화면 제공형 연동은 크게 세 단계로 이루어집니다.
+
+1. 앱 시작 시점에 `init` 호출
+2. 페어리 UI 진입 시점에 `setUserId` → `launchUI` 호출
+3. 로그아웃/탈퇴 시점 처리
+
+## STEP 1) 앱 시작 시점에 init 호출하기
+
+`Application#onCreate` 에서 `init` 을 호출합니다. `init` 은 SDK 기본 초기화를 수행하고, 인식 서비스가 비정상 종료됐던 경우 서비스를 자동으로 재시작합니다.
+
+- `init(config, callback)` [method reference](/ko/api/android)
+
+```kotlin
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        val moment = MomentSDK.getInstance(this)
+        moment.init(
+            config,
+            object : MomentSDK.RestartResultCallback {
+                override fun onSuccess(resultCode: MomentSDK.RestartResultCode) {
+                    if (resultCode == MomentSDK.RestartResultCode.SERVICE_RESTARTED) {
+                        // 인식 서비스가 재시작되었습니다.
+                    }
+                }
+
+                override fun onFailure(exception: MomentException) {
+                    // 초기화/재시작에 실패했습니다.
+                }
+            }
+        )
+    }
+}
+```
+
+<Note>
+  `init` 은 `userId` 설정 없이 호출할 수 있습니다. 로그인 이전 사용자에 대해서도 앱 시작 시점에 항상 호출해주세요.
+</Note>
+
+## STEP 2) 페어리 UI 진입 시점에 setUserId → launchUI 호출하기
+
+사용자가 페어리 서비스 화면(동의/설정/캐시백 등)에 진입하는 시점에 `setUserId` 로 사용자를 설정한 뒤 `launchUI` 를 호출합니다.
+
+- `launchUI(config, redirectTo, callback)` [method reference](/ko/api/android)
+- `redirectTo` 에 `/basic-sdk/consent` 를 입력하면 권한 동의 페이지로 이동합니다.
+
+```kotlin
+// NOTE: userId를 설정하지 않으면 launchUI가 실패합니다.
+momentSdk.setUserId("...", object : MomentSDK.ResultCallback {
+    override fun onSuccess() {
+        momentSdk.launchUI(
+            momentSdkConfig,
+            "/basic-sdk/consent",
+            object : MomentSDK.ResultCallback {
+                override fun onSuccess() {}
+
+                override fun onFailure(exception: MomentException) {}
+            }
+        )
+    }
+
+    override fun onFailure(exception: MomentException) {}
+})
+```
+
+<Note>
+  동의 수집, 권한 안내, 인식 서비스 시작은 모두 페어리 UI 안에서 처리됩니다. 고객사 앱에서 `start` 를 별도로 호출할 필요가 없습니다.
+</Note>
+
+## STEP 3) 동의 화면 종료 시점에 변경 값 조회하기 (Optional)
+
+웹뷰가 종료된 시점을 브로드캐스트로 수신해, 변경된 동의/권한 상태를 앱에서 읽을 수 있습니다.
+
+`AndroidManifest.xml` 파일에 receiver 를 추가합니다.
+
+```xml
+<application
+  ...>
+  <receiver
+    android:name="..."
+    android:enabled="true"
+    android:exported="false"
+  >
+    <intent-filter>
+      <action android:name="ai.fairytech.moment.action.CASHBACK_PAGE_CLOSED" />
+    </intent-filter>
+  </receiver>
+</application>
+```
+
+```kotlin
+class WebViewClosedReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != "ai.fairytech.moment.action.CASHBACK_PAGE_CLOSED") return
+
+        val moment = MomentSDK.getInstance(context.applicationContext)
+
+        // 인식 서비스 실행 여부 - boolean
+        val isRunning = moment.isRunning()
+
+        // App Usage 권한 설정 여부 - boolean
+        // 해당 권한이 없으면 인식 서비스를 실행할 수 없습니다.
+        val isAppUsagePermissionGranted = MomentSDK.isAppUsagePermissionGranted(context.applicationContext)
+
+        // Notification 권한 설정 여부 - boolean
+        // 해당 권한이 없으면 인식 서비스가 실행 중이어도 알림을 보낼 수 없습니다.
+        val isNotificationPermissionGranted = MomentSDK.isNotificationPermissionGranted(context.applicationContext)
+
+        val pendingResult = goAsync()
+        moment.getConsent(object : MomentSDK.CallbackWithResult<GetUserConsentResponse> {
+            override fun onSuccess(result: GetUserConsentResponse) {
+                // result 처리
+                pendingResult.finish()
+            }
+
+            override fun onFailure(exception: MomentException) {
+                // exception 처리
+                pendingResult.finish()
+            }
+        })
+    }
+}
+```
+
+## 로그아웃 / 탈퇴 처리하기
+
+### 로그아웃
+
+- **인식 서비스를 유지하는 경우 (기본 권장)**: 아무것도 호출하지 않아도 됩니다.
+- **인식 서비스를 종료하는 경우**: `wipeData()` 로 로컬 데이터를 삭제한 뒤 `stop()` 을 호출합니다.
+
+```kotlin
+momentSdk.wipeData()
+momentSdk.stop()
+```
+
+### 탈퇴
+
+사용자가 서비스에서 탈퇴하는 경우 `withdrawUserConsentAndStop()` 을 호출합니다. 모든 동의가 철회되고 인식 서비스가 종료됩니다.
+
+```kotlin
+momentSdk.withdrawUserConsentAndStop(object : MomentSDK.ResultCallback {
+    override fun onSuccess() {}
+
+    override fun onFailure(exception: MomentException) {}
+})
+```
+
+## 다음 단계
+
+<CardGroup cols={2}>
+  <Card title="동의 연동 API" icon="file-signature" href="/ko/dev-guide/x/consent-api">
+    앱 자체 플로우에서 받은 동의를 API로 반영하는 옵션입니다.
+  </Card>
+
+  <Card title="UI Theme 설정" icon="palette" href="/ko/dev-guide/x/ui-theme">
+    페어리 UI 화면의 테마를 앱에 맞게 조정합니다.
+  </Card>
+
+  <Card title="연동 테스트하기" icon="vial" href="/ko/dev-guide/x/qa">
+    연동이 올바르게 동작하는지 확인합니다.
+  </Card>
+
+  <Card title="X + Sigma 함께 쓰기" icon="layer-group" href="/ko/dev-guide/x-with-sigma">
+    구성 조합별 전체 호출 순서를 확인합니다.
+  </Card>
+</CardGroup>

@@ -1,0 +1,40 @@
+---
+title: "Cashback earnings - DB schema example"
+---
+
+Glossary
+
+- Host: a company that has integrated the Fairy cashback service
+- User: the end user who makes purchases at shopping malls through the Fairy cashback service embedded in the host's app
+- Shopping mall: shopping malls in the Fairy cashback service (11st, Temu, AliExpress, etc.)
+- Earnings: the record of a purchase made by a user at a shopping mall
+  - Earnings created: earnings confirmed on Fairy's side
+  - Earnings canceled: the user canceled the purchase
+  - Earnings confirmed: earnings finalized via purchase confirmation, delivery confirmation, etc.
+  - Cash accrual: commission accrued against confirmed earnings
+- SDK push notification: push notifications sent by the Fairy SDK via user-behavior recognition to encourage purchases
+- Fairy web console: [https://console.moment.fairytech.ai/](https://console.moment.fairytech.ai/)
+
+| Column | Description (Korean) | Type | Max length | Not Null | Example | Notes |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| id | Unique ID | int (auto\_increment) | - | TRUE | 1 | Host DB row unique ID |
+| transactionId | Transaction unique ID | varchar(50) | 50<br />(currently max 34 chars; reserved for future compat) | TRUE | 18000602354821<br />coupang\_8264938130659061\_133033257 | Fairy-side unique transaction ID |
+| type | Type | enum or varchar(20) | 20 | TRUE | IN\_APP<br />NOTIFICATION | IN\_APP: user accessed cashback directly via the host app to purchase.<br />NOTIFICATION: user clicked the Fairy SDK push notification and purchased through cashback. |
+| projectId | Project unique ID | varchar(24) | 24 | TRUE | 67b6f2a9688f4a05db0a1d45 | ID of the project created via the Fairy web console. |
+| notificationId | Notification unique ID | varchar(24) | 24 | FALSE | 6540c6dfd94458b60d8e7aca | Notification ID created via the Fairy web console.<br />null if the user did not purchase by clicking an SDK push notification. |
+| userId | User unique ID | varchar(\<host-defined\>) | \<host-defined\> | FALSE | 6182a2f3-2847-43ef-b738-6d5000d9d7fc | The unique user identifier the host created per user and passed to the Fairy cashback service.<br />The host must maintain the mapping between its own user identifier and this userId.<br />userId may be null due to mall system omissions or anomalous purchases. |
+| orderId | Order unique ID | varchar(100) | 100<br />(currently max 64 chars; reserved for future compat) | TRUE | O24076826846 | Unique order ID for the user's purchase at the mall. A single order can contain multiple items, so orderId may repeat. |
+| status | Earnings status | enum or varchar(20) | 20<br />(currently max 9 chars; reserved for future compat) | TRUE | CREATED<br />CANCELD<br />CONFIRMED | CREATED: earnings created<br />CANCELED: earnings canceled<br />CONFIRMED: earnings confirmed<br /><br />Currently callback data only includes CREATED; CANCELED etc. will be added later |
+| businessId | Mall unique ID | varchar(30) | 30<br />(currently max 18 chars; reserved for future compat) | TRUE | emart | Unique identifier for the mall the user purchased at |
+| businessName | Mall name | varchar(50) | 50<br />(currently max 29 chars; reserved for future compat) | TRUE | E-mart | Mall's display name |
+| salesAmount | Total transaction amount | float |  | TRUE | 8363.29 | Amount the user paid. Two decimal places. |
+| currency | Transaction currency | enum or varchar(10) | 10 | TRUE | KRW | Transaction currency |
+| totalCommissionAmount | User cashback commission | float |  | TRUE | 167 | Cashback commission the user receives when earnings confirm |
+| commissionAmount | User \+ host cashback commission | float |  | TRUE | 150.3 | totalCommissionAmount \+ the commission the host receives on confirmation |
+| confirmedEvent | Confirmation event type | varchar(30) | 30<br />(currently max 19 chars; reserved for future compat) | TRUE | PURCHASE\_CONFIRMED<br />PURCHASED<br />USED<br />CHECKOUT<br />DEPARTURE<br />DELIVERY\_DONE | Event that confirms earnings.<br />PURCHASE\_CONFIRMED: user confirmed the purchase<br />PURCHASED: purchased<br />USED: ticket etc. used<br />CHECKOUT: lodging etc. checked out<br />DEPARTURE: flight etc. departed<br />DELIVERY\_DONE: delivery completed |
+| confirmedDurationAmount | Confirmation duration | int |  | TRUE | 3 | Max time after purchase until earnings confirm |
+| confirmedDurationUnit | Confirmation duration unit | varchar(10) | 10<br />(currently only MONTH, max 5 chars; reserved for future compat) | TRUE | MONTH | Unit of time until earnings confirm. All malls currently use MONTH. |
+| transactionCreatedAt | Transaction created time | Datetime or Timestamp |  | TRUE | 2025-06-15 9:10:00 | Fairy-side earnings row initial creation time. |
+| transactionUpdatedAt | Transaction updated time | Datetime or Timestamp |  | TRUE | 2025-06-15 9:11:00 | Fairy-side earnings row last update time |
+| createdAt | DB created time | Datetime or Timestamp |  | TRUE | 2025-06-15 9:11:21 | Host DB row initial creation time |
+| updatedAt | DB updated time | Datetime or Timestamp |  | TRUE | 2025-06-16 20:48:07 | Host DB row last update time |

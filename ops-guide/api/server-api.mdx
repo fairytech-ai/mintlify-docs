@@ -1,0 +1,47 @@
+---
+title: "Server API"
+description: "고객사 서버와 직접 연동하는 Server API 목록"
+---
+
+페어리는 고객사의 서버 시스템과 직접 연동할 수 있는 Server API 를 제공합니다.
+
+## 주요 API
+
+### 실시간 실적 콜백
+
+사용자의 캐시백 실적이 발생한 경우, 페어리 서버가 고객사가 등록한 엔드포인트로 실적 정보를 실시간 전달합니다.
+
+### 확정 실적 조회 API
+
+매월 정산 시점(예: 5~7일)에 확정된 실적을 조회하여 고객사의 자체 리워드 지급 프로세스를 자동화할 수 있습니다.
+
+```http
+GET https://api.public.moment.fairytech.ai/project/{PROJECT_ID}/cashback/confirmed?yearMonth=YYYY-MM
+```
+
+Headers:
+
+- `x-moment-api-key`: 프로젝트 API Key
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "userId": "user-001",
+      "businessId": "gmarket",
+      "confirmedAmount": 5000,
+      "confirmedAt": "2025-07-05T10:00:00Z"
+    }
+  ]
+}
+```
+
+### 사용자 권한 동의 (Consent) API
+
+SDK 를 사용하지 않고도 사용자의 법적 동의 / 권한 설정을 서버 API 로 전달할 수 있습니다. (제공되는 세부 spec 참고)
+
+<Note>
+  전체 API 명세 및 인증 방식은 `eng@fairytech.ai` 를 통해 전달받은 API 문서를 참고하세요.
+</Note>

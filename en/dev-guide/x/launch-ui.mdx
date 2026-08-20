@@ -1,0 +1,188 @@
+---
+title: "Integrate with the Consent UI (launchUI)"
+sidebarTitle: "Integration"
+description: "Start the X service through Fairy's consent screen (Consent-UI mode · ConsentUI)"
+---
+
+<Tip>
+  This guide is for the **Consent-UI mode (ConsentUI)** setup.
+
+  Legal consent is managed through Fairy and collected on Fairy's consent/settings screen (`launchUI`). Ad notifications are delivered only to users who granted marketing consent.
+
+  Not sure this is your setup? Check [Find Your Integration Setup](/en/dev-guide/getting-started/find-your-setup) first.
+</Tip>
+
+## Prerequisites
+
+<Warning>
+  Complete [Getting Started \> Android Setup](/en/dev-guide/getting-started/setup) first.
+</Warning>
+
+The Consent-UI mode integration consists of three steps.
+
+1. Call `init` at app launch
+2. Call `setUserId` → `launchUI` when the user enters Fairy's UI
+3. Handle logout/account deletion
+
+## STEP 1) Call init at app launch
+
+Call `init` in `Application#onCreate`. `init` performs base SDK initialization, and automatically restarts the recognition service if it was terminated abnormally.
+
+- `init(config, callback)` [method reference](/en/api/android)
+
+```kotlin
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        val moment = MomentSDK.getInstance(this)
+        moment.init(
+            config,
+            object : MomentSDK.RestartResultCallback {
+                override fun onSuccess(resultCode: MomentSDK.RestartResultCode) {
+                    if (resultCode == MomentSDK.RestartResultCode.SERVICE_RESTARTED) {
+                        // The recognition service was restarted.
+                    }
+                }
+
+                override fun onFailure(exception: MomentException) {
+                    // Initialization/restart failed.
+                }
+            }
+        )
+    }
+}
+```
+
+<Note>
+  `init` can be called without a `userId`. Always call it at app launch, even for users who have not logged in yet.
+</Note>
+
+## STEP 2) Call setUserId → launchUI when entering Fairy's UI
+
+When the user enters a Fairy service screen (consent/settings/cashback, etc.), set the user with `setUserId`, then call `launchUI`.
+
+- `launchUI(config, redirectTo, callback)` [method reference](/en/api/android)
+- Pass `/basic-sdk/consent` as `redirectTo` to open the consent page.
+
+```kotlin
+// NOTE: launchUI fails if userId is not set.
+momentSdk.setUserId("...", object : MomentSDK.ResultCallback {
+    override fun onSuccess() {
+        momentSdk.launchUI(
+            momentSdkConfig,
+            "/basic-sdk/consent",
+            object : MomentSDK.ResultCallback {
+                override fun onSuccess() {}
+
+                override fun onFailure(exception: MomentException) {}
+            }
+        )
+    }
+
+    override fun onFailure(exception: MomentException) {}
+})
+```
+
+<Note>
+  Consent collection, permission guidance, and starting the recognition service are all handled inside Fairy's UI. Your app does not need to call `start` separately.
+</Note>
+
+## STEP 3) Read updated values when the consent screen closes (Optional)
+
+You can receive the WebView-closed moment as a broadcast and read the updated consent/permission state in your app.
+
+Add the receiver to `AndroidManifest.xml`.
+
+```xml
+<application
+  ...>
+  <receiver
+    android:name="..."
+    android:enabled="true"
+    android:exported="false"
+  >
+    <intent-filter>
+      <action android:name="ai.fairytech.moment.action.CASHBACK_PAGE_CLOSED" />
+    </intent-filter>
+  </receiver>
+</application>
+```
+
+```kotlin
+class WebViewClosedReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != "ai.fairytech.moment.action.CASHBACK_PAGE_CLOSED") return
+
+        val moment = MomentSDK.getInstance(context.applicationContext)
+
+        // Is the recognition service running? - boolean
+        val isRunning = moment.isRunning()
+
+        // Is App-Usage permission granted? - boolean
+        // Without it, the recognition service cannot run.
+        val isAppUsagePermissionGranted = MomentSDK.isAppUsagePermissionGranted(context.applicationContext)
+
+        // Is notification permission granted? - boolean
+        // Without it, notifications can't be shown even while the recognition service is running.
+        val isNotificationPermissionGranted = MomentSDK.isNotificationPermissionGranted(context.applicationContext)
+
+        val pendingResult = goAsync()
+        moment.getConsent(object : MomentSDK.CallbackWithResult<GetUserConsentResponse> {
+            override fun onSuccess(result: GetUserConsentResponse) {
+                // Handle result
+                pendingResult.finish()
+            }
+
+            override fun onFailure(exception: MomentException) {
+                // Handle exception
+                pendingResult.finish()
+            }
+        })
+    }
+}
+```
+
+## Handling logout / account deletion
+
+### Logout
+
+- **Keeping the recognition service running (recommended default)**: No calls needed.
+- **Stopping the recognition service**: Call `wipeData()` to clear local data, then call `stop()`.
+
+```kotlin
+momentSdk.wipeData()
+momentSdk.stop()
+```
+
+### Account deletion
+
+When the user deletes their account, call `withdrawUserConsentAndStop()`. All consents are withdrawn and the recognition service stops.
+
+```kotlin
+momentSdk.withdrawUserConsentAndStop(object : MomentSDK.ResultCallback {
+    override fun onSuccess() {}
+
+    override fun onFailure(exception: MomentException) {}
+})
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Consent API" icon="file-signature" href="/en/dev-guide/x/consent-api">
+    Optionally push consent collected in your own app flow into the SDK.
+  </Card>
+
+  <Card title="UI Theme setup" icon="palette" href="/en/dev-guide/x/ui-theme">
+    Adjust the Fairy UI theme to match your app.
+  </Card>
+
+  <Card title="Integration Testing" icon="vial" href="/en/dev-guide/x/qa">
+    Verify the integration works correctly.
+  </Card>
+
+  <Card title="Using X and Sigma Together" icon="layer-group" href="/en/dev-guide/x-with-sigma">
+    See the full call sequence for each setup combination.
+  </Card>
+</CardGroup>

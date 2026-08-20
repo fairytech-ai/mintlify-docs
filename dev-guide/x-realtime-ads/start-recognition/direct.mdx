@@ -1,0 +1,59 @@
+---
+title: "직접받기"
+description: "파트너 앱의 자체 UI로 동의를 받은 뒤 SDK에 전달"
+---
+
+## 개요
+
+파트너 앱이 자체 UI로 수집·이용 동의, 마케팅 수신 동의 여부를 받은 뒤 SDK API로 결과를 전달하는 방식입니다.
+
+## STEP 1) 개인정보 수집·이용 동의 업데이트
+
+```kotlin
+Moment.updatePrivacyConsent(
+    context = context,
+    isAgreed = true,         // 사용자 동의 여부
+    consentTimeMs = System.currentTimeMillis()
+)
+```
+
+## STEP 2) 마케팅 수신 동의 업데이트
+
+```kotlin
+Moment.updateMarketingConsent(
+    context = context,
+    isAgreed = true,
+    consentTimeMs = System.currentTimeMillis()
+)
+```
+
+## STEP 3) 알림 권한 요청 (Android 13\+)
+
+```kotlin
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    ActivityCompat.requestPermissions(
+        activity,
+        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+        REQUEST_CODE
+    )
+}
+```
+
+## STEP 4) 앱 사용 정보 접근 권한 안내
+
+`PACKAGE_USAGE_STATS` 권한은 사용자가 시스템 설정 화면에서 직접 허용해야 하므로, 안내 이후 설정 화면으로 이동시킵니다.
+
+```kotlin
+val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+startActivity(intent)
+```
+
+허용 여부 조회:
+
+```kotlin
+val granted = Moment.isUsageStatsPermissionGranted(context)
+```
+
+## STEP 5) 서비스 시작
+
+모든 동의/권한 처리가 끝난 뒤 [Start Service](/dev-guide/x-realtime-ads/start-recognition/start-service) 가이드를 따라 인식 서비스를 시작하세요.

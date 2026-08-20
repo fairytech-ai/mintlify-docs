@@ -1,0 +1,126 @@
+---
+title: "iOS (Swift) 연동하기"
+---
+
+## 사전 준비
+
+<Warning>
+  [시작하기 \> iOS Setup](/ko/dev-guide/getting-started/ios-setup) 을 먼저 완료하세요.
+</Warning>
+
+## 연동하기
+
+### STEP 1) 사용자 ID 설정
+
+캐시백 서비스를 사용하기 전에 사용자 ID를 설정하세요. 사용자 ID가 입력되지 않을 시 CashbackUI는 에러 메시지가 담긴 뷰를 보여주게 됩니다.
+
+```swift
+MomentCashbackService.setUserId(userId) { [weak self] payload in
+    DispatchQueue.main.async { [weak self] in
+        guard let self = self else { return }
+        if payload.success {
+		        // TODO: cashback 서비스 시작 
+        } else {
+        		// TODO: error handling
+        }
+    }
+}
+```
+
+### STEP 2) ViewController에 `CashbackViewController` 이용하여 구현
+
+아래 예제에서는 캐시백 서비스 론칭 및 프로그램 조회가 모두 이루어집니다.
+
+```swift
+class ContentViewController: UIViewController {
+    // redirect 설정될 URL 저장하기
+    private var redirectURL: String?
+
+		// 버튼 클릭시 캐시백 페이지 로딩하기
+    private func setupActions() {
+        redirectButton.addTarget(self, action: #selector(didTapRedirect), for: .touchUpInside)
+        launchButton.addTarget(self, action: #selector(didTapLaunch), for: .touchUpInside)
+    }
+
+    @objc private func didTapRedirect() {
+        // 원하는 redirectURL로 세팅
+        redirectURL = "/cashback/detail?business_id=coupang"
+        setUserAndPresentCashback()
+    }
+
+    @objc private func didTapLaunch() {
+			  // main page로 런딩
+        redirectURL = nil
+        setUserAndPresentCashback()
+    }
+
+    private func setUserAndPresentCashback() {
+        MomentCashbackService.setUserId(userId) { [weak self] payload in
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                if payload.success {
+                    self.presentCashback()
+                } else {
+                    self.showAlert(message: payload.message)
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func presentCashback() {
+        let vc = CashbackViewController()
+        vc.delegate = self
+        vc.redirectTo = redirectURL
+        vc.modalPresentationStyle = .fullScreen
+        present(vc, animated: true)
+    }
+    
+    private func showAlert(message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+}
+```
+
+### STEP 3) `CashbackViewControllerDelegate` 구현
+
+웹 콘텐츠가 종료를 신호할 때(View 내의 백 버튼을 클릭할 때) 수행할 작업을 정의할 수 있습니다. `cashbackViewControllerDidFinish` 콜백을 구현하여 처리할 수 있습니다.
+
+<Frame>
+  ![Image](/images/image-6.png)
+</Frame>
+
+만일 정상적으로 캐시백 뷰가 로드되지 못하는 상황을 따로 처리하고싶으시다면, `cashbackViewController` 를 사용하실 수 있습니다.
+
+```swift
+extension ContentViewController: CashbackViewControllerDelegate {
+    func cashbackViewControllerDidFinish(_ viewController: CashbackViewController) {
+        // SwiftUI 화면이 완료됐을 때
+        viewController.dismiss(animated: true)
+    }
+
+    func cashbackViewController(_ viewController: CashbackViewController, didFailWithError error: CashbackError) {
+        // SwiftUI 화면에서 에러가 발생했을 때
+        viewController.dismiss(animated: true) { [weak self] in
+            self?.showAlert(message: error.localizedDescription)
+        }
+    }
+}
+```
+
+## 다음 단계
+
+캐시백 서비스 추가 활용 가이드
+
+<Columns cols={2}>
+  <Column>
+    <Card title="캐시백 웹내 특정페이지로 바로가기" icon="sparkles" href="/ko/dev-guide/cashback/cashback-service/ios/route">
+    </Card>
+  </Column>
+  <Column>
+    <Card title="캐시백 프로그램 목록을 외부에서 노출하기" icon="sparkles" href="/ko/dev-guide/cashback/cashback-service/ios/programs">
+    </Card>
+  </Column>
+</Columns>

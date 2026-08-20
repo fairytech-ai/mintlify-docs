@@ -1,0 +1,70 @@
+---
+title: "(No-SDK) Objective-C 연동하기"
+---
+
+## Quickstarter
+
+아래 repository에서 예시 코드를 바로 확인해보실 수 있습니다.
+
+<Card title="iOS Cashback Web Objective-c" icon="sparkles" href="https://github.com/fairytech-external/ios-cashback-web-starter-c">
+</Card>
+
+실제로 예시 코드 앱을 실행해보시려면, 앱의 bundle ID를 사용하실 프로젝트에 등록해주시기 바랍니다.
+
+## 사전 준비
+
+<Warning>
+  [Getting Started \> iOS Setup](/ko/dev-guide/getting-started/ios-setup) 을 먼저 완료하세요.
+</Warning>
+
+자세한 설명은 [Swift No-SDK 가이드](/ko/dev-guide/cashback/no-sdk)와 같으며, 이 문서는 Objective-C 코드 예시를 제공합니다.
+
+### 기본 설정 예시
+
+```objectivec
+- (void)setupWebView {
+    WKWebViewConfiguration *config = [WKWebViewConfiguration new];
+
+    // 1) JS 팝업/새 창 허용
+    WKPreferences *prefs = [WKPreferences new];
+    prefs.javaScriptCanOpenWindowsAutomatically = YES;
+    config.preferences = prefs;
+
+    // 2) 페이지 내 JS 실행 허용
+    config.defaultWebpagePreferences.allowsContentJavaScript = YES;
+
+    // 3) DOM storage 활성화
+    config.websiteDataStore = [WKWebsiteDataStore defaultDataStore];
+
+    // 4) 쿼키 동기화(iOS13 이하 호환 예시)
+    for (NSHTTPCookie *cookie in [NSHTTPCookieStorage sharedHTTPCookieStorage].cookies) {
+        [config.websiteDataStore.httpCookieStore setCookie:cookie completionHandler:nil];
+    }
+}
+```
+
+### JavaScript Interface 구현 및 로드 예시
+
+```objectivec
+- (void)loadPage {
+    NSURLComponents *comps = [NSURLComponents new];
+    comps.scheme = @"https";
+    comps.host   = FAIRY_CASHBACK_DOMAIN;
+    comps.path   = FAIRY_CASHBACK_PATH;
+    if (self.redirectTo) {
+        comps.queryItems = @[
+            [NSURLQueryItem queryItemWithName:@"redirect_to" value:self.redirectTo]
+        ];
+    }
+    NSURL *url = comps.URL;
+    if (!url) return;
+
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
+    [req setValue:self.userId    forHTTPHeaderField:@"x-moment-user-id"];
+    [req setValue:self.projectId forHTTPHeaderField:@"x-moment-project-id"];
+    [req setValue:self.apiKey     forHTTPHeaderField:@"x-moment-web-api-key"];
+    [req setValue:@"IOS"         forHTTPHeaderField:@"x-moment-platform"];
+
+    [self.webView loadRequest:req];
+}
+```

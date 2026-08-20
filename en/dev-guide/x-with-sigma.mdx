@@ -1,0 +1,165 @@
+---
+title: "Using X and Sigma Together"
+description: "SDK call sequence for each setup combination"
+---
+
+This page summarizes the four representative setups when using X and Sigma together (or on their own), with the full call sequence for each.
+
+| # | Setup | Description |
+| :-- | :-- | :-- |
+| 1 | Consent-UI mode (X only) | Legal consent collected through Fairy's UI |
+| 2 | Consent-UI mode \+ Consent API \+ Sigma | Consent also collected in your own app flow, with Sigma enabled |
+| 3 | Self-managed consent mode \+ Sigma | You manage consent and only call start/stop, with Sigma enabled |
+| 4 | Sigma only | Audience targeting only |
+
+<Note>
+  For terminology, see [Product Overview \> Key terminology](/en/dev-guide/getting-started/overview#key-terminology). To pick a setup, see [Find Your Integration Setup](/en/dev-guide/getting-started/find-your-setup).
+</Note>
+
+## 1. Consent-UI mode (X only)
+
+```mermaid
+sequenceDiagram
+    participant Host as Host app
+    participant SDK
+    participant Server as Fairy server
+    Note over Host: App launch (Application.onCreate)
+    Host->>SDK: init(config, callback)
+    SDK->>SDK: Base initialization
+    opt If the recognition service was terminated abnormally
+        SDK->>Server: Fetch service bootstrap data
+        SDK->>SDK: Auto-restart the recognition service
+    end
+    Note over Host: Host app login
+    Host-->>SDK: (no calls)
+    Note over Host: Entering Fairy UI
+    Host->>SDK: setUserId(userId, callback)
+    Host->>SDK: launchUI(config, redirectTo, callback)
+    SDK->>Server: Load WebView (consent/service handling)
+    SDK-->>Host: onFinishCallback()
+    Note over Host: Host app logout
+    alt Keeping the recognition service
+        Host-->>SDK: (no calls)
+    else Stopping the recognition service
+        Host->>SDK: wipeData() + stop()
+    end
+    Note over Host: Account deletion
+    Host->>SDK: withdrawUserConsentAndStop()
+    SDK->>Server: Withdraw consent
+    SDK->>SDK: Stop the recognition service
+```
+
+For details, see [Integrate with the Consent UI (launchUI)](/en/dev-guide/x/launch-ui).
+
+## 2. Consent-UI mode \+ Consent API \+ Sigma
+
+```mermaid
+sequenceDiagram
+    participant Host as Host app
+    participant SDK
+    participant Server as Fairy server
+    Note over Host: App launch (Application.onCreate)
+    Host->>SDK: init(config, callback)
+    SDK->>SDK: Base initialization + Sigma preparation
+    SDK->>Server: Fetch service bootstrap data
+    opt If the recognition service was terminated abnormally
+        SDK->>SDK: Auto-restart the recognition service
+    end
+    Note over Host: User login
+    opt
+        Host->>SDK: setMarketingPushEnabled()
+        SDK->>Server: Uploaded only when the value changes
+    end
+    Note over Host: Entering the host app main screen
+    opt
+        Host->>SDK: setMarketingPushEnabled()
+        SDK->>Server: Uploaded only when the value changes
+    end
+    Note over Host: In-app consent flow (signup, etc.)
+    Host->>SDK: setUserId(userId, callback)
+    SDK-->>Host: onSuccess
+    Host->>SDK: getConsent(callback)
+    SDK->>Server: Query user consent state
+    Server-->>SDK: UserConsent
+    SDK-->>Host: onSuccess(UserConsent)
+    Host->>SDK: setConsent(userConsent, callback)
+    SDK->>Server: Upsert consent
+    Server-->>SDK: Final saved consent
+    SDK-->>Host: onSuccess(UserConsent)
+    Note over Host: Entering Fairy UI (the Fairy UI path remains available)
+    Host->>SDK: setUserId(userId, callback)
+    Host->>SDK: launchUI(config, redirectTo, callback)
+    SDK->>Server: Load WebView (consent/service handling)
+    SDK-->>Host: onFinishCallback()
+    Note over Host: Host app logout
+    alt Keeping the recognition service
+        Host-->>SDK: (no calls)
+    else Stopping the recognition service
+        Host->>SDK: wipeData() + stop()
+    end
+    Note over Host: Account deletion
+    Host->>SDK: withdrawUserConsentAndStop()
+    SDK->>Server: Withdraw consent
+    SDK->>SDK: Stop the recognition service
+```
+
+For details, see the [Consent API](/en/dev-guide/x/consent-api) and [Sigma Integration](/en/dev-guide/sigma-targeting/setup).
+
+## 3. Self-managed consent mode \+ Sigma
+
+```mermaid
+sequenceDiagram
+    participant Host as Host app
+    participant SDK
+    participant Server as Fairy server
+    Note over Host: App launch (Application.onCreate)
+    Host->>SDK: init(config, callback)
+    SDK->>SDK: Base initialization + Sigma preparation
+    SDK->>Server: Fetch service bootstrap data
+    opt If the recognition service was terminated abnormally
+        SDK->>SDK: Auto-restart the recognition service
+    end
+    Note over Host: User login
+    opt
+        Host->>SDK: setMarketingPushEnabled()
+        SDK->>Server: Uploaded only when the value changes
+    end
+    Note over Host: Entering the host app main screen
+    opt
+        Host->>SDK: setMarketingPushEnabled()
+        SDK->>Server: Uploaded only when the value changes
+    end
+    Note over Host: Starting the X recognition service
+    opt Only if your contract passes a customer user identifier
+        Host->>SDK: setUserId(userId, callback)
+    end
+    Host->>SDK: start(config, callback)
+    Note over Host: Host app logout
+    alt Keeping the recognition service
+        Host-->>SDK: (no calls)
+    else Stopping the recognition service
+        Host->>SDK: wipeData() + stop()
+    end
+    Note over Host: Account deletion
+    Host->>SDK: wipeData() + stop()
+```
+
+For details, see [Direct integration (start / stop)](/en/dev-guide/x/direct) and [Sigma Integration](/en/dev-guide/sigma-targeting/setup).
+
+## 4. Sigma only
+
+```mermaid
+sequenceDiagram
+    participant Host as Host app
+    participant SDK
+    participant Server as Fairy server
+    Note over Host: App launch (Application.onCreate)
+    Host->>SDK: init(config, callback)
+    SDK->>SDK: Base initialization + Sigma preparation
+    SDK->>Server: Fetch service bootstrap data
+    Note over Host: Whenever the marketing-push opt-in status is known
+    Host->>SDK: setMarketingPushEnabled()
+    SDK->>Server: Uploaded only when the value changes
+```
+
+For details, see [Sigma Integration](/en/dev-guide/sigma-targeting/setup).

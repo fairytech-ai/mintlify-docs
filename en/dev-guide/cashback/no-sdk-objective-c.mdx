@@ -1,0 +1,70 @@
+---
+title: "(No-SDK) Objective-C Integration"
+---
+
+## Quickstarter
+
+See the example code in the repository below.
+
+<Card title="iOS Cashback Web Objective-c" icon="sparkles" href="https://github.com/fairytech-external/ios-cashback-web-starter-c">
+</Card>
+
+To actually run the sample, register the app's bundle ID in your project.
+
+## Prerequisites
+
+<Warning>
+  Complete [Getting Started \> iOS Setup](/en/dev-guide/getting-started/ios-setup) first.
+</Warning>
+
+For detailed explanations, see the [Swift No-SDK guide](/en/dev-guide/cashback/no-sdk); this document provides Objective-C code samples.
+
+### Basic configuration example
+
+```objectivec
+- (void)setupWebView {
+    WKWebViewConfiguration *config = [WKWebViewConfiguration new];
+
+    // 1) Allow JS popups / new windows
+    WKPreferences *prefs = [WKPreferences new];
+    prefs.javaScriptCanOpenWindowsAutomatically = YES;
+    config.preferences = prefs;
+
+    // 2) Allow JS execution on the page
+    config.defaultWebpagePreferences.allowsContentJavaScript = YES;
+
+    // 3) Enable DOM storage
+    config.websiteDataStore = [WKWebsiteDataStore defaultDataStore];
+
+    // 4) Cookie sync (iOS 13 or below compatibility example)
+    for (NSHTTPCookie *cookie in [NSHTTPCookieStorage sharedHTTPCookieStorage].cookies) {
+        [config.websiteDataStore.httpCookieStore setCookie:cookie completionHandler:nil];
+    }
+}
+```
+
+### JavaScript Interface implementation \+ load example
+
+```objectivec
+- (void)loadPage {
+    NSURLComponents *comps = [NSURLComponents new];
+    comps.scheme = @"https";
+    comps.host   = FAIRY_CASHBACK_DOMAIN;
+    comps.path   = FAIRY_CASHBACK_PATH;
+    if (self.redirectTo) {
+        comps.queryItems = @[
+            [NSURLQueryItem queryItemWithName:@"redirect_to" value:self.redirectTo]
+        ];
+    }
+    NSURL *url = comps.URL;
+    if (!url) return;
+
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
+    [req setValue:self.userId    forHTTPHeaderField:@"x-moment-user-id"];
+    [req setValue:self.projectId forHTTPHeaderField:@"x-moment-project-id"];
+    [req setValue:self.apiKey     forHTTPHeaderField:@"x-moment-web-api-key"];
+    [req setValue:@"IOS"         forHTTPHeaderField:@"x-moment-platform"];
+
+    [self.webView loadRequest:req];
+}
+```

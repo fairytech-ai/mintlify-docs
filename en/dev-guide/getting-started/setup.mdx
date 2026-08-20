@@ -1,0 +1,128 @@
+---
+title: "Android Setup"
+description: "Preparation and configuration for SDK integration"
+---
+
+## Installation
+
+### Prerequisites
+
+Send the items below to `eng@fairytech.ai`. After we finish project setup we'll reply with your `Project ID`, `SDK API Key`, and `Maven Secret Key`.
+
+- Debug signing certificate SHA-1 keyhash and app package name
+- Release signing certificate SHA-1 keyhash and app package name
+- (For FCM or Cashback) service account key.json for push-notification setup
+
+### STEP 1) Add the SDK dependency
+
+Add the Maven repository that hosts MomentSDK to `settings.gradle` or `build.gradle`.
+
+<Note>
+  Replace `${MAVEN_SECRET}` with the Maven Secret Key value we sent you in advance.
+</Note>
+
+```kotlin
+// 1) Add the Maven repository
+repositories {
+    maven {
+        url "https://asia-northeast3-maven.pkg.dev/moment-prod-16047/moment-x"
+        // TODO: Replace MAVEN_SECRET.
+        credentials {
+            username = "_json_key_base64"
+            password = "${MAVEN_SECRET}"
+        }
+        authentication {
+            basic(BasicAuthentication)
+        }
+    }
+}
+```
+
+Add the moment dependency to `build.gradle`. After adding it, run `Sync Project with Gradle Files` and confirm the dependency downloads.
+
+```kotlin
+dependencies {
+    implementation "ai.fairytech:moment-x:${LATEST_VERSION}"
+}
+```
+
+### STEP 2) Configure Project ID and API Key
+
+Add `PROJECT_ID` and `API_KEY` to `AndroidManifest.xml`.
+
+<Note>
+  Replace `${PROJECT_ID}` and `${SDK_API_KEY}` with the values we sent you in advance.
+</Note>
+
+```xml
+<application ...>
+    <meta-data
+        android:name="ai.fairytech.moment.PROJECT_ID"
+        android:value="${PROJECT_ID}" />
+    <meta-data
+        android:name="ai.fairytech.moment.API_KEY"
+        android:value="${SDK_API_KEY}" />
+</application>
+```
+
+### STEP 3) Apply the Proguard rules
+
+```kotlin
+-keep class ai.fairytech.moment.** { *; }
+-keep interface ai.fairytech.moment.** { *; }
+```
+
+## Configure the SDK inside your app
+
+### STEP 1) Initialize
+
+Initialize the SDK when the app starts. Call it from `Application#onCreate`.
+
+```kotlin
+class MyApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        Moment.initialize(this)
+    }
+}
+```
+
+### STEP 2) Set up Config
+
+Before starting the Moment service, set the config required for execution. ([Example code in the starter](https://github.com/fairytech-external/android-x-starter/blob/eedd27ba080e3581afacb165ea2f31dd601d9756/app/src/main/java/ai/fairytech/moment/sample/ui/main/BaseMainFragment.kt#L207))
+
+- `notificationChannelId`, `notificationId`, `notificationIconResId`
+  - The notificationChannel info for the recognition push notification.
+  - When you create the notification channel passed as `notificationChannelId`, set its importance to `IMPORTANCE_HIGH` or higher so the notification is delivered to the user as a heads-up.
+    - This is the notificationChannel info for the foreground service. That notification exists to inform the user that a foreground service is running.
+- `serviceNotificationChannelId`, `serviceNotificationId`, `serviceNotificationIconResId`, `serviceNotificationTitle`, `serviceNotificationText`
+
+```kotlin
+// Kotlin
+MomentSDK.Config(applicationContext)
+	.notificationChannelId(NotificationController.NOTIFICATION_CHANNEL_ID) // notification channel id
+	.notificationId(NotificationController.NOTIFICATION_ID) // notification id
+	.notificationIconResId(R.drawable.baseline_person_24) // notification small icon
+	.serviceNotificationChannelId(NotificationController.SERVICE_NOTIFICATION_CHANNEL_ID) // channel id required for the service
+	.serviceNotificationId(NotificationController.SERVICE_NOTIFICATION_ID)
+	.serviceNotificationIconResId(R.drawable.baseline_person_24) // service notification small icon
+	.serviceNotificationTitle("Recognition service")
+	.serviceNotificationText("Recognition service is running")
+	
+// Java
+new MomentSDK.Config(applicationContext)
+	.notificationChannelId(NotificationController.NOTIFICATION_CHANNEL_ID) // notification channel id
+	.notificationId(NotificationController.NOTIFICATION_ID) // notification id
+	.notificationIconResId(R.drawable.baseline_person_24) // notification small icon
+	.serviceNotificationChannelId(NotificationController.SERVICE_NOTIFICATION_CHANNEL_ID) // channel id required for the service
+	.serviceNotificationId(NotificationController.SERVICE_NOTIFICATION_ID)
+	.serviceNotificationIconResId(R.drawable.baseline_person_24) // service notification small icon
+	.serviceNotificationTitle("Recognition service")
+	.serviceNotificationText("Recognition service is running")
+```
+
+<Warning>
+  When you create the notification channel passed as `notificationChannelId`, set its importance to `IMPORTANCE_HIGH` or higher.
+
+  (That way the notification is delivered as a heads-up.)
+</Warning>

@@ -1,0 +1,177 @@
+---
+title: "iOS SDK API"
+---
+
+# Class
+
+## `MomentCashbackService`
+
+```swift
+
+class MomentCashbackService {
+    private init() {}
+    
+    // 사용자 ID 설정 (콜백 있음)
+    func setUserId(_ userId: String, onComplete: CashbackCallbackPayload) {}
+    
+    // 캐시백 리스트 불러오기
+    func listCashback(onComplete: @Sendable @MainActor @escaping (Result<[CashbackProgramType], Error>) -> Void) {
+}
+```
+
+- Full reference
+  ```swift
+  func listCashback(onComplete: @Sendable @MainActor @escaping (Result<[CashbackProgramType], Error>) -> Void) {
+  ```
+  ## Argument
+  - _Returns_
+    - .success (list)
+    - .failure(error)
+
+## `CashbackViewController`
+
+UIKit에서 캐시백 서비스 UI를 론칭할때 사용하는 클래스
+
+```swift
+public class CashbackViewController: UIViewController {
+		// retun값을 받을 delegate
+    public weak var delegate: CashbackViewControllerDelegate?
+    // Redirect하고 싶은 URL
+    public var redirectTo: String?
+}
+```
+
+## `CashbackViewControllerDelegate`
+
+`CashbackViewController` 콜백 delegate protocol
+
+```swift
+public protocol CashbackViewControllerDelegate: AnyObject {
+		// UI 화면에서 종료시 불림
+		func cashbackViewControllerDidFinish(_ viewController: CashbackViewController)
+		
+		// UI 화면에서 에러가 발생했을 때
+		func cashbackViewController(_ viewController: CashbackViewController, didFailWithError error: CashbackError)
+}
+```
+
+## `CashbackError`
+
+```swift
+// WARNING: case가 불러와지지 않습니다. CashbackError.rawValue (0,1, ...)로 이용이 필요합니다
+
+public enum CashbackError: Error {
+    /**
+     * @case userIdNotFound
+     * @discussion Indicates that no user ID could be found or retrieved,
+     *           which is necessary for Moment cashback service activation.
+     */
+    case userIdNotFound = 0
+
+    /**
+     * @case initializationError
+     * @discussion Indicates that an error occurred during CashbackUI initialization.
+     * @param error The underlying error regarding initialization.
+     */
+    case initializationError(Error)
+}
+```
+
+# Callback
+
+## `CashbackCallbackPayload`
+
+```swift
+
+/// Simple callback payload for SDK operations
+public struct CashbackCallbackPayload: Sendable {
+    public let success: Bool
+    public let message: String
+}
+```
+
+- Full reference
+  ```kotlin
+  case success:
+  ```
+  - _Description_
+    - method 호출이 성공했을 때 불림.
+  ```kotlin
+  fun onFailure(exception: MomentException)
+  ```
+  - _Description_
+    - method 호출이 실패했을 때 불림.
+
+# Data
+
+Moment가 제공하는 Cashback program 상세 페이지에서는 각 data들을 아래와 같이 사용하고 있습니다.
+
+## `CashbackProgramType`
+
+```swift
+public struct CashbackProgramType {
+    public var businessId: String
+    public var businessName: String
+    public var businessImageUrl: String
+    public var category: BusinessCategoryType
+    public var url: String
+    public var programName: String
+    public var displayAllowedCases: String
+    public var displayCaution: String
+    public var products: [CashbackProductType]
+}
+```
+
+## `CashbackProductType`
+
+```swift
+public struct CashbackProductType {
+    public var target: String
+    public var startDateTimestampMillis: Int64
+    public var endDateTimestampMillis: Int64
+    public var commissionType: CashbackCommissionType
+    public var commission: CashbackCommission
+}
+```
+
+## `CashbackCommission`
+
+```swift
+public struct CashbackCommission {
+    public var amount: String
+    public var unit: CashbackCommissionUnit
+}
+```
+
+## `CashbackCommissionType`
+
+```swift
+public enum CashbackCommissionType {
+		case unknown = 0
+    case CPS
+    case CPA
+    case CPC
+    case CPM
+}
+```
+
+## `BusinessCategoryType`
+
+```swift
+public enum BusinessCategoryType: Int, Sendable, CaseIterable {
+    case unknown = 0
+    case food
+    case mall
+    case culture
+    case travel
+    case electronics
+    case infant
+    case health
+    case fashion
+    case beauty
+    case finance
+    case living
+    case education
+    case etc
+}
+```

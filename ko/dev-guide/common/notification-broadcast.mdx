@@ -1,0 +1,64 @@
+---
+title: "알림 내역 브로드캐스트 수신 (Android)"
+description: "SDK가 발송한 알림 내역을 앱에서 수신하기"
+---
+
+Moment SDK가 알림을 발송할 때마다 Broadcast를 통해 알림 내역을 앱에서 받아볼 수 있습니다. X 실시간 알림 등 SDK가 표시하는 모든 알림에 공통으로 적용되며, 자체 로깅·분석 등에 활용할 수 있습니다.
+
+## Step 1) receiver 설정하기
+
+AndroidManifest.xml 파일에 receiver 를 추가합니다.
+
+```xml
+<application
+	...>	
+	<receiver
+	  android:name="..."
+	  android:enabled="true"
+	  android:exported="false"
+	>
+	  <intent-filter>
+	    <action android:name="ai.fairytech.moment.action.NOTIFICATION_SENT" />
+	  </intent-filter>
+	</receiver>
+</application>
+```
+
+## Step 2) 수신된 값 확인 및 처리
+
+```kotlin
+/**
+ * Moment SDK가 알림을 표시했을 때 호출되는 브로드캐스트입니다.
+ *
+ * 수신 Action:
+ * ai.fairytech.moment.action.NOTIFICATION_SENT
+ *
+ * notification_type 값에 따라 알림의 종류를 구분할 수 있습니다.
+ *
+ * DEVICE:
+ * - 사용자가 특정 앱 또는 페이지에 진입/이탈했을 때 표시되는 일반 알림입니다.
+ * - campaign_id, business_id, activity_match_type, page_name 값이 포함될 수 있습니다.
+ *
+ * FGS:
+ * - 포그라운드 인식 서비스에서 표시되는 상주 알림입니다.
+ * - campaign_id, business_id, activity_match_type, page_name 값은 전달되지 않을 수 있습니다.
+ */
+class NotificationSentReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != "ai.fairytech.moment.action.NOTIFICATION_SENT") return
+
+        val notificationType = intent.getStringExtra("notification_type")
+        val notificationId = intent.getStringExtra("notification_id")
+        val title = intent.getStringExtra("title")
+        val body = intent.getStringExtra("body")
+        val imageUrl = intent.getStringExtra("image_url")
+        val clickUrl = intent.getStringExtra("click_url")
+        val campaignId = intent.getStringExtra("campaign_id")
+        val businessId = intent.getStringExtra("business_id")
+        val activityMatchType = intent.getStringExtra("activity_match_type")
+        val pageName = intent.getStringExtra("page_name")
+        val timestampMillis = intent.getLongExtra("timestamp_millis", 0L)
+        val isBubble = intent.getBooleanExtra("is_bubble", false)
+    }
+}
+```

@@ -1,0 +1,190 @@
+---
+title: "Configure FCM"
+description: "Firebase Cloud Messaging setup for server-sent push notifications"
+---
+
+To receive push notifications sent from the Fairy server — such as cashback transaction-created notifications — you need to configure Firebase Cloud Messaging (FCM). This setup is shared across products whenever server-sent notifications are used.
+
+## Setup
+
+### Step 1: Add Firebase to your project
+
+Follow Google's official guide to add Firebase to your Android project.
+
+- Reference: _Firebase Android setup guide_ ([https://firebase.google.com/docs/android/setup](https://firebase.google.com/docs/android/setup))
+
+### Step 2: Enable the Firebase Cloud Messaging API
+
+In the Google Cloud console, select the **project linked to your app** and enable the [**Firebase Cloud Messaging API**](https://console.cloud.google.com/apis/library/fcm.googleapis.com)
+
+<Frame>
+  ![Image](/images/image.png)
+</Frame>
+
+### Step 3: Create a service account
+
+Next, create a new service account so Fairy can make authenticated API calls when registering FCM tokens.
+
+Go to **Google Cloud** \> **Service Accounts**, choose the project, and click **CREATE SERVICE ACCOUNT**.
+
+<Frame>
+  ![Image](/images/image-1.png)
+</Frame>
+
+Enter a service account name, ID, and description, then click **CREATE AND CONTINUE**.
+
+In the Role field, choose **Firebase Cloud Messaging API Admin**.
+
+(If you need more restrictive access, create a [custom role](https://cloud.google.com/iam/docs/creating-custom-roles) with the `cloudmessaging.messages.create` permission and choose that.)
+
+⚠️ Note: Choose **Firebase Cloud Messaging API Admin**, not **Firebase Cloud Messaging Admin**.
+
+<Frame>
+  ![Image](/images/image-2.png)
+</Frame>
+
+### Step 4: Create JSON credentials
+
+Create JSON credentials for the FCM service account.
+
+In Google Cloud IAM & Admin, choose Service Accounts, find the FCM service account you just created, and go to **Actions** \> **Manage Keys**.
+
+<Frame>
+  ![Image](/images/image-3.png)
+</Frame>
+
+Choose Add Key \> Create new key.
+
+<Frame>
+  ![Image](/images/image-4.png)
+</Frame>
+
+Choose **JSON**, then click **CREATE**.
+
+<Frame>
+  ![Image](/images/image-5.png)
+</Frame>
+
+⚠️ Warning: Store the downloaded JSON key securely; you'll need it in the following steps.
+
+### Step 5: Send the JSON to Fairy
+
+Repeat steps 1–4 for each environment you need, then send us the JSON file(s). (Development, production.)
+
+email: [eng@fairytech.ai](mailto:eng@fairytech.ai)
+
+## Displaying notifications
+
+### 1. Add Cloud Messaging as a dependency
+
+Add **Firebase Messaging** and **Moment SDK (push extension)** to `build.gradle`.
+
+```text
+plugins {
+	id("com.google.gms.google-services")
+}
+
+dependencies {
+	implementation("com.google.firebase:firebase-messaging:+")
+	implementation "ai.fairytech:moment-x-push:${LATEST_VERSION}"
+}
+```
+
+Add the notification permission to `AndroidManifest.xml`.
+
+```bash
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+```
+
+### 2. Create and register a FirebaseMessagingService
+
+- Subclass `FirebaseMessagingService` to handle **token** and **message** events.
+- Register the service in `AndroidManifest.xml`.
+
+```kotlin
+class CustomFcmService : FirebaseMessagingService() {
+    override fun onNewToken(token: String) {
+    }
+
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+    }
+}
+```
+
+```xml
+<service
+    android:name=".CustomFcmService"
+    android:exported="false">
+    <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT" />
+    </intent-filter>
+</service>
+```
+
+### 3. Wire the MomentSDK into FirebaseMessagingService
+
+```kotlin
+import ai.fairytech.moment.MomentSDK
+import ai.fairytech.moment.exception.MomentException
+import ai.fairytech.moment.MomentPush
+
+class CustomFcmService : FirebaseMessagingService() {
+
+    override fun onNewToken(token: String) {	
+				// Register the token
+				MomentPush.addDeviceToken(token, object: MomentSDK.ResultCallback {
+					override fun onSuccess() {
+					}
+					
+					override fun onFailure() {
+						Log.w("CustomFcmService", "Failed to set token to moment")
+					}
+				}) 
+    }
+
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        if (MomentPush.isFairyMessage(message)) {
+	        MomentPush.handleMessage(message)
+        }
+    }
+}
+```
+
+### 4. Register the user
+
+```kotlin
+val momentSDK = MomentSDK.getInstance(context)
+// Register the user
+momentSDK.setUserId(userId, object: MomentSDK.ResultCallback {
+	override fun onSuccess() {
+		// Once userId is set, register that user with the push system
+		MomentPush.registerUserToPush(object: MomentSDK.ResultCallback {
+			override fun onSuccess() {
+			}
+			override fun onFailure() {
+			}
+		})
+	}
+	override fun onFailure() {
+	}
+})
+```
+
+### 5. Testing
+
+- Use the Moment Public API to send a test message.
+  - Confirm your projectId and API key and pass them in the headers and params.
+  - `x-moment-api-key` is different from `sdk-api-key`. Use the separately delivered api-key.
+
+```bash
+curl -X 'POST' \
+  '<https://api.public.moment.fairytech.ai/project/{YOUT_PROJECT_ID}/device-message/send>' \
+  -H 'accept: */*' \
+  -H 'x-moment-api-key: {YOUR_API_KEY}' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "userId": "test-user-id",
+  "sdkVersion": "1.2.3",
+  "businessName": "gmarket"
+}'
+```

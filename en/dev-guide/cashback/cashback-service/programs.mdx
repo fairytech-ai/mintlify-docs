@@ -1,0 +1,77 @@
+---
+title: "Expose the cashback program list externally"
+description: "Query and expose the cashback program list inside the app"
+---
+
+## Overview
+
+This guide describes how to **surface cashback program info outside of Fairy's Cashback Web** and route users into the program detail page.
+
+## **Step 1) Fetch the cashback program list**
+
+- Fetch programs using the SDK's `listCashback` method.
+- listCashback(callback: ListCashbackResultCallback)
+  - [fun setConsent(request: SubmitUserConsentRequest, callback: CallbackWithResult\<SubmitUserConsentResponse\>)](/en/api/android)
+
+## **Step 2) Handle the callback result**
+
+- Results are delivered via `ListCashbackResultCallback`'s `onSuccess`.
+- You can use the **cashback program list (CashbackProgram)** data.
+  - [Callback](/en/api/android)
+  - `CashbackProgram`
+
+### **Key data useful for external display**
+
+- `CashbackProgram` contains many fields useful for external UI. Key fields:
+  | Field | Description | Example |
+  | :-- | :-- | :-- |
+  | businessId | Unique id of the mall running the cashback program |  |
+  | businessName | Display name of the mall |  |
+  | businessImageUrl | Mall logo image |  |
+  | products | List of products the cashback program targets |  |
+  | products\[index\].comission | Cashback commission info.<br /><br />- amount \+ unit combination<br /> | amount: `“2.5”`<br />unit: `PERCENTAGE_COMMISSION_UNIT` |
+  <Frame>
+    <img
+      src="/images/image.png"
+      alt="Image"
+      title="Image"
+      style={{ width:"76%" }}
+    />
+  </Frame>
+
+## **Step 3) Route users to the program detail page**
+
+- On tap, land the user directly on the program detail page.
+- Pass a businessId with `launchUI` to **land on the detail page**.
+- See [1. Open a specific page inside Cashback Web directly](/en/dev-guide/cashback/cashback-service/route).
+
+## **Example code**
+
+```kotlin
+listCashback(object : ListCashbackResultCallback {
+    override fun onSuccess(programs: List<CashbackProgram>) {
+        // Display the program list in the UI
+        cashbackPrograms.forEach { program ->
+          val businessId = program.businessId
+          val name = program.businessName
+          val logoUrl = program.businessImageUrl
+          
+          // For "Up to N% off!" display, pick the product with the highest commission from productsList
+          // and expose that value.
+          val commission = program.productsList[0].commission
+
+          showCashbackItem(businessId, name, logoUrl, commission) {
+              momentSDK.launchUI(
+                  config,
+                  "/cashback/detail?business_id=$businessId",
+                  callback
+              )
+          }
+      }
+    }
+    override fun onFailure(error: Throwable) {
+        // Error handling
+        showError(error.message)
+    }
+})
+```

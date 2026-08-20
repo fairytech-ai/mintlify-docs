@@ -1,0 +1,68 @@
+---
+title: "Expose the cashback program list externally"
+---
+
+This guide describes how to **surface cashback program info outside of Fairy's Cashback Web** and route users into the program detail page.
+
+## **Step 1) Fetch the cashback program list**
+
+- Fetch programs using the SDK's `listCashback` method.
+- listCashback(callback: ListCashbackResultCallback)
+  - `MomentCashbackService`
+
+## **Step 2) Handle the callback result**
+
+- Results are delivered via `onComplete`'s `success`.
+- You can use the **cashback program list (CashbackProgram)** data.
+  - `CashbackProgramType`
+
+### **Key data useful for external display**
+
+- `CashbackProgramType` contains many fields useful for external UI. Key fields:
+
+| Field | Description | Example |
+| :-- | :-- | :-- |
+| businessId | Unique id of the mall running the cashback program |  |
+| businessName | Display name of the mall |  |
+| businessImageUrl | Mall logo image |  |
+| products | List of products the cashback program targets |  |
+| products\[index\].comission | Cashback commission info.<br /><br />- amount \+ unit combination<br /> | amount: `“2.5”`<br />unit: `PERCENTAGE_COMMISSION_UNIT` |
+
+<Frame>
+  ![Image](/images/image-6.png)
+</Frame>
+
+## **Step 3) Route users to the program detail page**
+
+- On tap, land the user directly on the program detail page.
+- Pass a businessId with `setUserId` to **land on the detail page**.
+- See [1. Open a specific page inside Cashback Web directly](/en/dev-guide/cashback/cashback-service/ios/route).
+
+## **Example code**
+
+```swift
+MomentCashbackService.listCashback { result in
+    switch result {
+    case .success(let list):
+        for program in list {
+            let businessId = program.businessID
+            let name = program.businessName
+            let logoURL = program.businessImageURL
+            
+            // For "Up to N% off!" display, you can pick the product with the highest commission
+            // from productsList and expose that value.
+            let commission = program.products[0].commission?.amount
+            
+            // commission unit
+            let commissionUnit = program.products[0].commission?.unit.rawValue
+            print(businessId, name, logoURL, commission, commissionUnit)
+        }
+        print("Callback: success")
+    case .failure(let error):
+        print("Error:", error.localizedDescription)
+        print("Callback: failure - \(error.localizedDescription)")
+    }
+}
+```
+
+---

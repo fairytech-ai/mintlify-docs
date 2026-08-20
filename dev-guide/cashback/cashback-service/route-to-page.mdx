@@ -1,0 +1,28 @@
+---
+title: "캐시백 웹 내 특정 페이지로 라우팅"
+description: "SDK launchUI를 이용해 Cashback Web 특정 페이지로 직접 이동"
+---
+
+`launchUI` method 는 페어리에서 웹뷰를 제공합니다. `redirectTo` 파라미터를 통해 다음 페이지들에 바로 접속 가능합니다.
+
+| 페이지 | redirectTo |
+| --- | --- |
+| 법적 동의 페이지 | `/basic-sdk/consent` |
+| 설정 페이지 | `/basic-sdk/settings` |
+
+```kotlin
+// NOTE: userId를 설정하지 않으면 launchUI 실패
+momentSdk.setUserId("...", object : MomentSDK.ResultCallback {
+    override fun onSuccess() {
+        momentSdk.launchUI(
+            momentSdkConfig,
+            "/basic-sdk/consent",
+            object : MomentSDK.ResultCallback {
+                override fun onSuccess() {}
+                override fun onFailure(exception: MomentException) {}
+            }
+        )
+    }
+    override fun onFailure(exception: MomentException) {}
+})
+```

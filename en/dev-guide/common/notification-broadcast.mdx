@@ -1,0 +1,64 @@
+---
+title: "Receive notification broadcasts (Android)"
+description: "Receive records of SDK-delivered notifications in your app"
+---
+
+Whenever the Moment SDK delivers a notification, your app can receive its details via a Broadcast. This applies to every notification the SDK displays — X real-time notifications and more — and is useful for your own logging and analytics.
+
+## Step 1) Set up the receiver
+
+Add the receiver to `AndroidManifest.xml`.
+
+```xml
+<application
+	...>	
+	<receiver
+	  android:name="..."
+	  android:enabled="true"
+	  android:exported="false"
+	>
+	  <intent-filter>
+	    <action android:name="ai.fairytech.moment.action.NOTIFICATION_SENT" />
+	  </intent-filter>
+	</receiver>
+</application>
+```
+
+## Step 2) Read and handle the received values
+
+```kotlin
+/**
+ * Broadcast fired when the Moment SDK displays a notification.
+ *
+ * Receive Action:
+ * ai.fairytech.moment.action.NOTIFICATION_SENT
+ *
+ * The notification_type value distinguishes the notification kind.
+ *
+ * DEVICE:
+ * - The generic notification shown when the user enters/exits a specific app or page.
+ * - May include campaign_id, business_id, activity_match_type, page_name.
+ *
+ * FGS:
+ * - The persistent notification shown by the foreground recognition service.
+ * - campaign_id, business_id, activity_match_type, page_name may not be delivered.
+ */
+class NotificationSentReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != "ai.fairytech.moment.action.NOTIFICATION_SENT") return
+
+        val notificationType = intent.getStringExtra("notification_type")
+        val notificationId = intent.getStringExtra("notification_id")
+        val title = intent.getStringExtra("title")
+        val body = intent.getStringExtra("body")
+        val imageUrl = intent.getStringExtra("image_url")
+        val clickUrl = intent.getStringExtra("click_url")
+        val campaignId = intent.getStringExtra("campaign_id")
+        val businessId = intent.getStringExtra("business_id")
+        val activityMatchType = intent.getStringExtra("activity_match_type")
+        val pageName = intent.getStringExtra("page_name")
+        val timestampMillis = intent.getLongExtra("timestamp_millis", 0L)
+        val isBubble = intent.getBooleanExtra("is_bubble", false)
+    }
+}
+```

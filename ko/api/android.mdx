@@ -1,0 +1,261 @@
+---
+title: "Android API"
+---
+
+<Check>
+  **version: v2.0.2**
+</Check>
+
+# Class
+
+## `MomentSDK`
+
+```kotlin
+class MomentSDK {
+	@JvmStatic
+	fun getInstance(context: Context): MomentSDK
+
+	// Lifecycle
+	fun start(config: Config, callback: ResultCallback)
+	fun stop(callback: ResultCallback)
+	fun init(config: Config, callback: RestartResultCallback)
+	fun isRunning(): Boolean
+
+	// UI
+	fun launchUI(config: Config, callback: ResultCallback, finishCallback: UiFinishCallback? = null)
+	fun launchUI(config: Config, redirectTo: String, callback: ResultCallback, finishCallback: UiFinishCallback? = null)
+	fun dismissUI(callback: ResultCallback)
+
+	// User
+	fun setUserId(userId: String, callback: ResultCallback)
+	fun getUserId(): String
+	fun setAdId(adId: String, isAdTrackingEnabled: Boolean, callback: ResultCallback)
+	fun setUserAttributes(userAttributes: UserAttributes, callback: ResultCallback)
+	fun setSendBubble(sendBubble: Boolean)
+
+	// Consent
+	fun getConsent(callback: CallbackWithResult<UserConsent>)
+	fun setConsent(userConsent: UserConsent, callback: CallbackWithResult<UserConsent>)
+	fun logout(callback: ResultCallback)
+	fun withdraw(callback: ResultCallback)
+
+	// Cashback
+	fun listCashback(callback: ListCashbackResultCallback)
+	fun goToCashback(businessId: String, callback: ResultCallback)
+
+	// Permission utils
+	@JvmStatic
+	fun isAppUsagePermissionGranted(context: Context): Boolean
+	@JvmStatic
+	fun isVpnPermissionGranted(context: Context): Boolean
+	@JvmStatic
+	fun isNotificationPermissionGranted(context: Context): Boolean
+}
+```
+
+주요 메서드 설명은 [과거 버전 - v2.0.0 API 문서](/ko/api/android-api/2.0.0)를 참고해주세요. 이 페이지는 v2.0.2 기준으로 동일한 시그니쳐를 유지합니다.
+
+## `MomentSDK.Config`
+
+```kotlin
+class Config : Serializable {
+	constructor()
+	constructor(appContext: Context)
+
+	fun notificationChannelId(notificationChannelId: String): Config
+	fun notificationId(notificationId: Int): Config
+	fun notificationIconResId(notificationIconResId: Int): Config
+
+	fun serviceNotificationChannelId(serviceNotificationChannelId: String): Config
+	fun serviceNotificationId(serviceNotificationId: Int): Config
+	fun serviceNotificationIconResId(serviceNotificationIconResId: Int): Config
+	fun serviceNotificationIconColorInt(@ColorInt serviceNotificationIconColorInt: Int): Config
+	fun serviceNotificationTitle(serviceNotificationTitle: String): Config
+	fun serviceNotificationText(serviceNotificationText: String): Config
+	fun serviceNotificationLinkUrl(serviceNotificationLinkUrl: String): Config
+
+	fun hideServiceNotification(hideServiceNotification: Boolean): Config
+}
+```
+
+Config 클래스는 builder pattern으로 인스턴스를 구성합니다. 각 setter 메서드는 `Config` 자기 자신을 반환하므로 chaining 가능합니다.
+
+`notificationChannelId`로 넘겨주는 알림 채널을 생성할 때, importance를 `IMPORTANCE_HIGH` 이상으로 설정해주셔야 합니다. (그래야 사용자에게 heads-up 알림으로 알림이 나가게 됩니다.)
+
+## `MomentException`
+
+```kotlin
+class MomentException(val errorCode: ErrorCode, errorMessage: String) : Exception(errorMessage) {
+	constructor(errorCode: ErrorCode, context: Context)
+
+	val errorCode: ErrorCode
+	override val message: String
+}
+```
+
+## `UserAttributes`
+
+```kotlin
+class UserAttributes private constructor(
+	val gender: Gender?,
+	val birthYear: Int?,
+) {
+	class Builder {
+		fun gender(value: Gender): Builder
+		fun birthYear(value: Int): Builder
+		fun build(): UserAttributes
+	}
+}
+```
+
+객체는 다음과 같이 builder를 통해 생성합니다.
+
+```kotlin
+val attrs = UserAttributes.Builder()
+	.gender(Gender.FEMALE)
+	.birthYear(1990)
+	.build()
+```
+
+# Enum
+
+## `ErrorCode`
+
+```kotlin
+enum class ErrorCode {
+	API_NOT_ACTIVATED,
+	APP_USAGE_PERMISSION_REQUIRED,
+	VPN_PERMISSION_REQUIRED,
+	NETWORK_CONNECTION_REQUIRED,
+	SERVICE_START_FAILED,
+	SERVICE_STOP_FAILED,
+	SERVICE_ALREADY_STARTING,
+	PROJECT_ID_REQUIRED,
+	API_KEY_REQUIRED,
+	GET_SIGNING_KEY_FAILED,
+	AUTHENTICATION_FAILED,
+	EMPTY_USER_ID,
+	EMPTY_CASHBACK_BUSINESS_ID,
+	INVALID_CONFIG,
+	INVALID_USER_ATTRIBUTES,
+	CASHBACK_NOT_FOUND,
+	TOO_MANY_REQUESTS,
+	TEMPORARY_SERVER_ERROR,
+	ERROR_OCCURRED,
+	EMPTY_DEVICE_TOKEN,
+	PUSH_NOT_SUPPORTED,
+}
+```
+
+## `Gender`
+
+```kotlin
+enum class Gender {
+	MALE,
+	FEMALE,
+}
+```
+
+## `MomentSDK.RestartResultCode`
+
+```kotlin
+enum class RestartResultCode {
+	SERVICE_SHOULD_NOT_BE_RUNNING,
+	SERVICE_ALREADY_RUNNING,
+	SERVICE_RESTARTED,
+}
+```
+
+# Callback
+
+## `MomentSDK.CallbackWithResult<T>`
+
+```kotlin
+interface CallbackWithResult<T> {
+	fun onSuccess(result: T)
+	fun onFailure(exception: MomentException)
+}
+```
+
+## `MomentSDK.ResultCallback`
+
+```kotlin
+interface ResultCallback {
+	fun onSuccess()
+	fun onFailure(exception: MomentException)
+}
+```
+
+## `MomentSDK.UiFinishCallback`
+
+```kotlin
+interface UiFinishCallback {
+	fun onFinish()
+}
+```
+
+`launchUI` 로 띄운 페어리 제공 웹뷰가 finish 되었을 때 트리거됩니다.
+
+## `MomentSDK.RestartResultCallback`
+
+```kotlin
+interface RestartResultCallback {
+	fun onSuccess(resultCode: RestartResultCode)
+	fun onFailure(exception: MomentException)
+}
+```
+
+## `MomentSDK.ListCashbackResultCallback`
+
+```kotlin
+interface ListCashbackResultCallback {
+	fun onSuccess(cashbackPrograms: List<CashbackProgram>)
+	fun onFailure(exception: MomentException)
+}
+```
+
+# Data
+
+## `UserConsent`
+
+```kotlin
+class UserConsent(items: List<ConsentItem>) {
+	val items: List<ConsentItem>
+	fun isGranted(code: String): Boolean?
+}
+
+data class ConsentItem(
+	val code: String,
+	val isGranted: Boolean,
+)
+```
+
+- `setConsent` / `getConsent` 가 사용하는 동의 정보 객체
+- `isGranted(code)` 는 해당 code의 동의 항목이 없으면 **null**, 있으면 그 항목의 동의 여부 (true/false)를 반환합니다.
+
+지원되는 consent item code
+
+- `TERMS_OF_SERVICE` — 서비스 이용 약관
+- `PERSONAL_INFO` — 개인정보 수집/이용
+- `MARKETING_PUSH` — 마케팅 정보 수신
+- `MARKETING_PERSONAL_INFO` — 마케팅 활용을 위한 개인정보 처리
+- `NIGHTTIME_PUSH` — 야간 알림 수신
+- `PARTNER_THIRD_PARTY_PROVISION` — 제3자 제공 동의 (파트너)
+- `HOST_AD_PUSH` — 고객사앱 마케팅 알림 수신 동의
+- `HOST_NIGHTTIME_PUSH` — 고객사앱 야간 알림 수신 동의
+
+## `CashbackProgram`
+
+```kotlin
+class CashbackProgram {
+	val businessId: String
+	val businessName: String
+	val businessImageUrl: String
+	val url: String
+	val programName: String
+	val productsList: List<CashbackProduct>
+}
+```
+
+- `productsList` 는 비어 있을 수 없으며, 항상 `[0]` 번 index가 main product로 취급됨.
+- 모든 항목이 동일한 프로그램을 공유하는 경우 `[0]` 번 index에 `target = ""` 로 데이터가 들어가 있음.
