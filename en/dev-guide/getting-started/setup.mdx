@@ -7,18 +7,26 @@ description: "Preparation and configuration for SDK integration"
 
 ### Prerequisites
 
-Send the items below to `eng@fairytech.ai`. After we finish project setup we'll reply with your `Project ID`, `SDK API Key`, and `Maven Secret Key`.
+Send the items below to `eng@fairytech.ai`. After project setup, we'll reply with the SDK installation values for your integration.
 
 - Debug signing certificate SHA-1 keyhash and app package name
 - Release signing certificate SHA-1 keyhash and app package name
 - (For FCM or Cashback) service account key.json for push-notification setup
+
+| Placeholder | Value |
+| :-- | :-- |
+| `{SDK_ARTIFACT_ID}` | SDK artifact ID provided by Fairy for your integration. For example, `moment-x` or `moment-x-push` |
+| `{SDK_VERSION}` | SDK version provided by Fairy. For example, `2.0.2` |
+| `{MAVEN_SECRET}` | Maven Secret Key provided by Fairy |
+| `{PROJECT_ID}` | Project identifier issued by Fairy |
+| `{SDK_API_KEY}` | SDK API Key used to initialize Moment SDK |
 
 ### STEP 1) Add the SDK dependency
 
 Add the Maven repository that hosts MomentSDK to `settings.gradle` or `build.gradle`.
 
 <Note>
-  Replace `${MAVEN_SECRET}` with the Maven Secret Key value we sent you in advance.
+  Replace `{MAVEN_SECRET}` with the Maven Secret Key provided by Fairy.
 </Note>
 
 ```kotlin
@@ -26,10 +34,10 @@ Add the Maven repository that hosts MomentSDK to `settings.gradle` or `build.gra
 repositories {
     maven {
         url "https://asia-northeast3-maven.pkg.dev/moment-prod-16047/moment-x"
-        // TODO: Replace MAVEN_SECRET.
+        // Enter the Maven Secret Key provided by Fairy.
         credentials {
             username = "_json_key_base64"
-            password = "${MAVEN_SECRET}"
+            password = "{MAVEN_SECRET}"
         }
         authentication {
             basic(BasicAuthentication)
@@ -42,7 +50,7 @@ Add the moment dependency to `build.gradle`. After adding it, run `Sync Project 
 
 ```kotlin
 dependencies {
-    implementation "ai.fairytech:moment-x:${LATEST_VERSION}"
+    implementation "ai.fairytech:{SDK_ARTIFACT_ID}:{SDK_VERSION}"
 }
 ```
 
@@ -51,17 +59,17 @@ dependencies {
 Add `PROJECT_ID` and `API_KEY` to `AndroidManifest.xml`.
 
 <Note>
-  Replace `${PROJECT_ID}` and `${SDK_API_KEY}` with the values we sent you in advance.
+  Replace `{PROJECT_ID}` and `{SDK_API_KEY}` with the values provided by Fairy.
 </Note>
 
 ```xml
 <application ...>
     <meta-data
         android:name="ai.fairytech.moment.PROJECT_ID"
-        android:value="${PROJECT_ID}" />
+        android:value="{PROJECT_ID}" />
     <meta-data
         android:name="ai.fairytech.moment.API_KEY"
-        android:value="${SDK_API_KEY}" />
+        android:value="{SDK_API_KEY}" />
 </application>
 ```
 

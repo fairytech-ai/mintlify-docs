@@ -6,7 +6,7 @@ API to query adjustment amounts (separate from confirmed earnings) that were pai
 
 At settlement time, combine this API's `adjustmentAmount` with the confirmed-earnings V2 API's `confirmedAmount` to compute the final settlement amount.
 
-\[GET\] [https://api.public.moment.fairytech.ai/organization](https://api.public.moment.fairytech.ai/organization/`:organizationPublicId`/adjustments)`:organizationPublicId`[/adjustments](https://api.public.moment.fairytech.ai/organization/`:organizationPublicId`/adjustments)
+`GET https://api.public.moment.fairytech.ai/organization/{ORGANIZATION_PUBLIC_ID}/adjustments`
 
 ### Request headers
 
@@ -19,6 +19,8 @@ At settlement time, combine this API's `adjustmentAmount` with the confirmed-ear
 | Parameter | Type | Description | Required | Default |
 | :-- | :-- | :-- | :-- | :-- |
 | organizationPublicId | string | Host ID | O | - |
+
+Replace `{ORGANIZATION_PUBLIC_ID}` with the customer ID provided by Fairy.
 
 ### Query string
 
@@ -35,7 +37,7 @@ If you pass `user_id`, only that user's adjustment history is returned.
 ### Request example
 
 ```json
-GET <https://api.public.moment.fairytech.ai/organization/fairy/adjustments?year=2025&month=3&page=1&limit=20>
+GET https://api.public.moment.fairytech.ai/organization/{ORGANIZATION_PUBLIC_ID}/adjustments?year=2025&month=3&page=1&limit=20
 ```
 
 ### Response data

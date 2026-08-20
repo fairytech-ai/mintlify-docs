@@ -48,7 +48,7 @@ For security reasons, the SDK does not print internal logs. Verify the integrati
     curl -X POST \
       'https://api.public.moment.fairytech.ai/project/{PROJECT_ID}/device-message/send' \
       -H 'accept: */*' \
-      -H 'x-moment-api-key: {API_KEY}' \
+      -H 'x-moment-api-key: {PUBLIC_API_KEY}' \
       -H 'Content-Type: application/json' \
       -d '{ "userId": "test-user-id" }'
     ```
@@ -61,7 +61,7 @@ For security reasons, the SDK does not print internal logs. Verify the integrati
     curl -X POST \
       'https://api.public.moment.fairytech.ai/project/{PROJECT_ID}/device-message/send' \
       -H 'accept: */*' \
-      -H 'x-moment-api-key: {API_KEY}' \
+      -H 'x-moment-api-key: {PUBLIC_API_KEY}' \
       -H 'Content-Type: application/json' \
       -d '{ "attributeKey": "member_id", "attributeValue": "user-1234" }'
     ```

@@ -21,7 +21,7 @@ A typical implementation: **at monthly settlement time (around the 5th–7th), r
 ### Endpoint
 
 ```json
-GET <https://api.public.moment.fairytech.ai/organization/:organizationPublicId/settled_transactions>
+GET https://api.public.moment.fairytech.ai/organization/{ORGANIZATION_PUBLIC_ID}/settled_transactions
 ```
 
 ### Headers
@@ -35,6 +35,8 @@ GET <https://api.public.moment.fairytech.ai/organization/:organizationPublicId/s
 | Parameter | Type | Description | Required | Default |
 | :-- | :-- | :-- | :-- | :-- |
 | organizationPublicId | string | Host ID | O | - |
+
+Replace `{ORGANIZATION_PUBLIC_ID}` with the customer ID provided by Fairy.
 
 \<aside\><br />💡 **Tip:** If you didn't previously receive an organizationPublicId by email,<br />please email [eng@fairytech.ai](mailto:eng@fairytech.ai).
 
@@ -55,7 +57,7 @@ If you pass `user_id`, only that user's earnings are returned; in that case the 
 ### Example
 
 ```sql
-GET <https://api.public.moment.fairytech.ai/organization/fairy_card/settled_transactions?year=2025&month=11&page=1&limit=20>
+GET https://api.public.moment.fairytech.ai/organization/{ORGANIZATION_PUBLIC_ID}/settled_transactions?year=2025&month=11&page=1&limit=20
 ```
 
 ## Response

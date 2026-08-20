@@ -21,7 +21,7 @@ title: "확정실적 목록 조회 API"
 ### 엔드포인트
 
 ```json
-GET <https://api.public.moment.fairytech.ai/organization/:organizationPublicId/settled_transactions>
+GET https://api.public.moment.fairytech.ai/organization/{ORGANIZATION_PUBLIC_ID}/settled_transactions
 ```
 
 ### 헤더
@@ -35,6 +35,8 @@ GET <https://api.public.moment.fairytech.ai/organization/:organizationPublicId/s
 | 파라미터 | 타입 | 설명 | 필수여부 | 기본값 |
 | :-- | :-- | :-- | :-- | :-- |
 | organizationPublicId | string | 고객사 ID | O | - |
+
+`{ORGANIZATION_PUBLIC_ID}`에는 Fairy에서 전달한 고객사 ID를 입력합니다.
 
 \<aside\><br />💡 **Tip:** 기존에 이메일로 organizationPublicId 값을 전달받지 못하신 경우,<br />[eng@fairytech.ai](mailto:eng@fairytech.ai) 로 이메일 부탁드립니다.
 
@@ -55,7 +57,7 @@ GET <https://api.public.moment.fairytech.ai/organization/:organizationPublicId/s
 ### 예시
 
 ```sql
-GET <https://api.public.moment.fairytech.ai/organization/fairy_card/settled_transactions?year=2025&month=11&page=1&limit=20>
+GET https://api.public.moment.fairytech.ai/organization/{ORGANIZATION_PUBLIC_ID}/settled_transactions?year=2025&month=11&page=1&limit=20
 ```
 
 ## 응답

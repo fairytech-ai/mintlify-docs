@@ -80,6 +80,10 @@ email: [eng@fairytech.ai](mailto:eng@fairytech.ai)
 
 build.gradle 에 **Firebase Messaging** 과 **Moment SDK(push 확장)** 를 추가합니다.
 
+<Note>
+  `{SDK_ARTIFACT_ID}`와 `{SDK_VERSION}`에는 Fairy에서 전달한 고객사별 SDK artifact ID와 버전을 입력합니다.
+</Note>
+
 ```text
 plugins {
 	id("com.google.gms.google-services")
@@ -87,7 +91,7 @@ plugins {
 
 dependencies {
 	implementation("com.google.firebase:firebase-messaging:+")
-	implementation "ai.fairytech:moment-x-push:${LATEST_VERSION}"
+	implementation "ai.fairytech:{SDK_ARTIFACT_ID}:{SDK_VERSION}"
 }
 ```
 
@@ -155,13 +159,13 @@ class CustomFcmService : FirebaseMessagingService() {
 
 ```bash
 curl -X 'POST' \
-  '<https://api.public.moment.fairytech.ai/project/{YOUT_PROJECT_ID}/device-message/send>' \
+  'https://api.public.moment.fairytech.ai/project/{PROJECT_ID}/device-message/send' \
   -H 'accept: */*' \
-  -H 'x-moment-api-key: {YOUR_API_KEY}' \
+  -H 'x-moment-api-key: {PUBLIC_API_KEY}' \
   -H 'Content-Type: application/json' \
   -d '{
   "userId": "test-user-id",
-  "sdkVersion": "1.2.3",
+  "sdkVersion": "{SDK_VERSION}",
   "businessName": "gmarket"
 }'
 ```

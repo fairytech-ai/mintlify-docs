@@ -47,6 +47,10 @@ Fairy가 FCM 토큰 등록 시 인증된 API 호출을 할 수 있도록 새 서
 
 `build.gradle` 에 **Firebase Messaging** 과 **Moment SDK(push 확장)** 을 추가합니다.
 
+<Note>
+  `{SDK_ARTIFACT_ID}`와 `{SDK_VERSION}`에는 Fairy에서 전달한 고객사별 SDK artifact ID와 버전을 입력합니다.
+</Note>
+
 ```kotlin
 plugins {
     id("com.google.gms.google-services")
@@ -54,7 +58,7 @@ plugins {
 
 dependencies {
     implementation("com.google.firebase:firebase-messaging:+")
-    implementation "ai.fairytech:moment-x-push:${LATEST_VERSION}"
+    implementation "ai.fairytech:{SDK_ARTIFACT_ID}:{SDK_VERSION}"
 }
 ```
 
@@ -129,13 +133,13 @@ Moment Public API 를 사용해 테스트 메시지를 전송합니다.
 
 ```bash
 curl -X 'POST' \
-  'https://api.public.moment.fairytech.ai/project/{YOUR_PROJECT_ID}/device-message/send' \
+  'https://api.public.moment.fairytech.ai/project/{PROJECT_ID}/device-message/send' \
   -H 'accept: */*' \
-  -H 'x-moment-api-key: {YOUR_API_KEY}' \
+  -H 'x-moment-api-key: {PUBLIC_API_KEY}' \
   -H 'Content-Type: application/json' \
   -d '{
   "userId": "test-user-id",
-  "sdkVersion": "1.2.3",
+  "sdkVersion": "{SDK_VERSION}",
   "businessName": "gmarket"
 }'
 ```
