@@ -48,7 +48,7 @@ Fairy가 FCM 토큰 등록 시 인증된 API 호출을 할 수 있도록 새 서
 `build.gradle` 에 **Firebase Messaging** 과 **Moment SDK(push 확장)** 을 추가합니다.
 
 <Note>
-  `{SDK_ARTIFACT_ID}`와 `{SDK_VERSION}`에는 Fairy에서 전달한 고객사별 SDK artifact ID와 버전을 입력합니다.
+  `{SDK_ARTIFACT_ID}`와 `{SDK_VERSION}`에는 Fairy에서 제공한 고객사별 SDK artifact ID와 버전을 입력합니다.
 </Note>
 
 ```kotlin
@@ -150,5 +150,5 @@ curl -X POST \
 ```
 
 <Note>
-  `x-moment-api-key`에는 SDK API Key와 별도로 전달드린 Server API Key를 사용하세요.
+  `x-moment-api-key`에는 SDK API Key와 별도로 Fairy에서 제공한 Server API Key를 사용하세요.
 </Note>

@@ -15,10 +15,10 @@ description: "SDK 연동을 위한 사전 준비 및 설정"
 
 | 플레이스홀더 | 입력할 값 |
 | :-- | :-- |
-| `{SDK_ARTIFACT_ID}` | 연동 구성에 따라 Fairy에서 전달한 SDK artifact ID. 예: `moment-x`, `moment-x-push` |
-| `{SDK_VERSION}` | Fairy에서 전달한 SDK 버전. 예: `2.0.2` |
-| `{MAVEN_SECRET}` | Fairy에서 전달한 Maven Secret Key |
-| `{PROJECT_ID}` | Fairy에서 발급한 프로젝트 식별자 |
+| `{SDK_ARTIFACT_ID}` | 연동 구성에 따라 Fairy에서 제공한 SDK artifact ID. 예: `moment-x`, `moment-x-push` |
+| `{SDK_VERSION}` | Fairy에서 제공한 SDK 버전. 예: `2.0.2` |
+| `{MAVEN_SECRET}` | Fairy에서 제공한 Maven Secret Key |
+| `{PROJECT_ID}` | Fairy에서 제공한 프로젝트 식별자 |
 | `{SDK_API_KEY}` | Moment SDK 초기화에 사용하는 SDK API Key |
 
 ### STEP 1) SDK dependency 추가
@@ -26,7 +26,7 @@ description: "SDK 연동을 위한 사전 준비 및 설정"
 `settings.gradle` 또는 `build.gradle` 에 MomentSDK를 다운로드 받을 maven repository를 추가해주세요.
 
 <Note>
-  `{MAVEN_SECRET}`에는 사전에 전달드린 Maven Secret Key를 입력합니다.
+  `{MAVEN_SECRET}`에는 사전에 제공한 Maven Secret Key를 입력합니다.
 </Note>
 
 ```kotlin
@@ -34,7 +34,7 @@ description: "SDK 연동을 위한 사전 준비 및 설정"
 repositories {
     maven {
         url "https://asia-northeast3-maven.pkg.dev/moment-prod-16047/moment-x"
-        // Fairy에서 전달한 Maven Secret Key를 입력합니다.
+        // Fairy에서 제공한 Maven Secret Key를 입력합니다.
         credentials {
             username = "_json_key_base64"
             password = "{MAVEN_SECRET}"
@@ -59,7 +59,7 @@ dependencies {
 `AndroidManifest.xml`에 `PROJECT_ID`, `API_KEY`를 추가해주세요.
 
 <Note>
-  `{PROJECT_ID}`, `{SDK_API_KEY}`에는 사전에 전달드린 값을 입력합니다.
+  `{PROJECT_ID}`, `{SDK_API_KEY}`에는 사전에 제공한 값을 입력합니다.
 </Note>
 
 ```xml
