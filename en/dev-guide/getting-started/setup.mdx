@@ -13,6 +13,18 @@ Send the items below to `eng@fairytech.ai`. After project setup, we'll reply wit
 - Release signing certificate SHA-1 keyhash and app package name
 - (For FCM or Cashback) service account key.json for push-notification setup
 
+<Note>
+  Each local environment can use a different `debug.keystore`, so debug SHA-1 keyhashes can differ. Send the SHA-1 from every local environment used for development. For release, use the SHA-1 of the production app-signing certificate. If you use Google Play App Signing, check the app-signing key SHA-1 in Play Console in addition to the upload key.
+</Note>
+
+Run the following command from the project root to find the SHA-1 for each build variant.
+
+```bash
+./gradlew signingReport
+```
+
+Find `SHA1` for the target variant in the output and send it with the corresponding app package name. See [Google's client authentication guide](https://developers.google.com/android/guides/client-auth) for details.
+
 | Placeholder | Value |
 | :-- | :-- |
 | `{SDK_ARTIFACT_ID}` | SDK artifact ID provided by Fairy for your integration. For example, `moment-x` or `moment-x-push` |
