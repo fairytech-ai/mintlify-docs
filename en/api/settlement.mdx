@@ -30,7 +30,7 @@ Base URL: `https://api.public.moment.fairytech.ai`
 
 | Header | Required | Description |
 | :-- | :-- | :-- |
-| x-moment-api-key | O | API server auth key |
+| x-moment-api-key | O | Server API Key issued by Fairy |
 
 ### Path parameters
 
@@ -60,7 +60,7 @@ If you pass `user_id`, only that user's earnings are returned; in that case the 
 
 ```bash
 ORGANIZATION_PUBLIC_ID="{ORGANIZATION_PUBLIC_ID}"
-PUBLIC_API_KEY="{PUBLIC_API_KEY}"
+SERVER_API_KEY="{SERVER_API_KEY}"
 YEAR="2025"
 MONTH="11"
 PAGE="1"
@@ -68,7 +68,7 @@ LIMIT="20"
 
 curl -X GET \
   "https://api.public.moment.fairytech.ai/organization/${ORGANIZATION_PUBLIC_ID}/settled_transactions?year=${YEAR}&month=${MONTH}&page=${PAGE}&limit=${LIMIT}" \
-  -H "x-moment-api-key: ${PUBLIC_API_KEY}"
+  -H "x-moment-api-key: ${SERVER_API_KEY}"
 ```
 
 ## Response

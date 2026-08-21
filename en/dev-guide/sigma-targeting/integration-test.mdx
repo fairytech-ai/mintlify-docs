@@ -38,7 +38,7 @@ For security reasons, the SDK does not print internal logs. Verify the integrati
     3. If the test notification arrives shortly after, the **device-to-server integration is complete**.
   </Step>
   <Step title="Verify by sending directly via FCM (optional)">
-    If you have completed the FCM integration, you can also verify by sending a test message directly through the Moment Public API. `x-moment-api-key` is a separate key from the SDK key, so request one through your support channel if you don't have it.
+    If you have completed the FCM integration, you can also verify by sending a test message directly through the Moment Public API. Use the Server API Key issued separately from the SDK API Key for `x-moment-api-key`. Request one through your support channel if you don't have it.
 
     Specify the target with **exactly one** method: `userId` or a user attribute.
 
@@ -46,12 +46,12 @@ For security reasons, the SDK does not print internal logs. Verify the integrati
 
     ```bash
     PROJECT_ID="{PROJECT_ID}"
-    PUBLIC_API_KEY="{PUBLIC_API_KEY}"
+    SERVER_API_KEY="{SERVER_API_KEY}"
     USER_ID="{USER_ID}"
 
     curl -X POST \
       "https://api.public.moment.fairytech.ai/project/${PROJECT_ID}/device-message/send" \
-      -H "x-moment-api-key: ${PUBLIC_API_KEY}" \
+      -H "x-moment-api-key: ${SERVER_API_KEY}" \
       -H "Content-Type: application/json" \
       -d "{ \"userId\": \"${USER_ID}\" }"
     ```
@@ -62,13 +62,13 @@ For security reasons, the SDK does not print internal logs. Verify the integrati
 
     ```bash
     PROJECT_ID="{PROJECT_ID}"
-    PUBLIC_API_KEY="{PUBLIC_API_KEY}"
+    SERVER_API_KEY="{SERVER_API_KEY}"
     ATTRIBUTE_KEY="{ATTRIBUTE_KEY}"
     ATTRIBUTE_VALUE="{ATTRIBUTE_VALUE}"
 
     curl -X POST \
       "https://api.public.moment.fairytech.ai/project/${PROJECT_ID}/device-message/send" \
-      -H "x-moment-api-key: ${PUBLIC_API_KEY}" \
+      -H "x-moment-api-key: ${SERVER_API_KEY}" \
       -H "Content-Type: application/json" \
       -d "{ \"attributeKey\": \"${ATTRIBUTE_KEY}\", \"attributeValue\": \"${ATTRIBUTE_VALUE}\" }"
     ```

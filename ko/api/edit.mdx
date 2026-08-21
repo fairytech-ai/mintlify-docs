@@ -20,7 +20,7 @@ Base URL: `https://api.public.moment.fairytech.ai`
 
 | 헤더명 | 필수여부 | 설명 |
 | :-- | :-- | :-- |
-| x-moment-api-key | O | API 서버 인증키 |
+| x-moment-api-key | O | Fairy에서 발급한 Server API Key |
 
 ### 요청 경로 파라미터
 
@@ -46,7 +46,7 @@ Base URL: `https://api.public.moment.fairytech.ai`
 
 ```bash
 ORGANIZATION_PUBLIC_ID="{ORGANIZATION_PUBLIC_ID}"
-PUBLIC_API_KEY="{PUBLIC_API_KEY}"
+SERVER_API_KEY="{SERVER_API_KEY}"
 YEAR="2025"
 MONTH="3"
 PAGE="1"
@@ -54,7 +54,7 @@ LIMIT="20"
 
 curl -X GET \
   "https://api.public.moment.fairytech.ai/organization/${ORGANIZATION_PUBLIC_ID}/adjustments?year=${YEAR}&month=${MONTH}&page=${PAGE}&limit=${LIMIT}" \
-  -H "x-moment-api-key: ${PUBLIC_API_KEY}"
+  -H "x-moment-api-key: ${SERVER_API_KEY}"
 ```
 
 ### 응답 데이터

@@ -27,12 +27,12 @@ Base URL: `https://api.public.moment.fairytech.ai`
 
 ```bash
 PROJECT_ID="{PROJECT_ID}"
-PUBLIC_API_KEY="{PUBLIC_API_KEY}"
+SERVER_API_KEY="{SERVER_API_KEY}"
 YEAR_MONTH="{YEAR_MONTH}"
 
 curl -X GET \
   "https://api.public.moment.fairytech.ai/project/${PROJECT_ID}/cashback/confirmed?yearMonth=${YEAR_MONTH}" \
-  -H "x-moment-api-key: ${PUBLIC_API_KEY}"
+  -H "x-moment-api-key: ${SERVER_API_KEY}"
 ```
 
 #### 응답 예시
