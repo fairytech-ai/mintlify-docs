@@ -150,7 +150,7 @@ USER_ID="{USER_ID}"
 curl -X POST \
   "https://api.public.moment.fairytech.ai/project/${PROJECT_ID}/device-message/send" \
   -H "x-moment-api-key: ${PUBLIC_API_KEY}" \
-  -H 'Content-Type: application/json' \
+  -H "Content-Type: application/json" \
   -d "{
     \"userId\": \"${USER_ID}\"
   }"
@@ -174,7 +174,7 @@ ATTRIBUTE_VALUE="{UNIQUE_TEST_ATTRIBUTE_VALUE}" # UUID처럼 중복될 가능성
 curl -X POST \
   "https://api.public.moment.fairytech.ai/project/${PROJECT_ID}/device-message/send" \
   -H "x-moment-api-key: ${PUBLIC_API_KEY}" \
-  -H 'Content-Type: application/json' \
+  -H "Content-Type: application/json" \
   -d "{
     \"attributeKey\": \"${ATTRIBUTE_KEY}\",
     \"attributeValue\": \"${ATTRIBUTE_VALUE}\"

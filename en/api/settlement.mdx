@@ -20,9 +20,11 @@ A typical implementation: **at monthly settlement time (around the 5th–7th), r
 
 ### Endpoint
 
-```json
-GET https://api.public.moment.fairytech.ai/organization/{ORGANIZATION_PUBLIC_ID}/settled_transactions
+```http
+GET /organization/{ORGANIZATION_PUBLIC_ID}/settled_transactions
 ```
+
+Base URL: `https://api.public.moment.fairytech.ai`
 
 ### Headers
 
@@ -54,10 +56,19 @@ Replace `{ORGANIZATION_PUBLIC_ID}` with the customer ID provided by Fairy.
 
 If you pass `user_id`, only that user's earnings are returned; in that case the response is by single user, so page and limit are unnecessary.
 
-### Example
+### Request example
 
-```sql
-GET https://api.public.moment.fairytech.ai/organization/{ORGANIZATION_PUBLIC_ID}/settled_transactions?year=2025&month=11&page=1&limit=20
+```bash
+ORGANIZATION_PUBLIC_ID="{ORGANIZATION_PUBLIC_ID}"
+PUBLIC_API_KEY="{PUBLIC_API_KEY}"
+YEAR="2025"
+MONTH="11"
+PAGE="1"
+LIMIT="20"
+
+curl -X GET \
+  "https://api.public.moment.fairytech.ai/organization/${ORGANIZATION_PUBLIC_ID}/settled_transactions?year=${YEAR}&month=${MONTH}&page=${PAGE}&limit=${LIMIT}" \
+  -H "x-moment-api-key: ${PUBLIC_API_KEY}"
 ```
 
 ## Response
@@ -79,7 +90,7 @@ GET https://api.public.moment.fairytech.ai/organization/{ORGANIZATION_PUBLIC_ID}
   - We return commission summed per user (deduplicated) across every transaction in the query range, sorted ascending by userId.
   - `confirmedAmount` is the sum of each of the user's individual commissions rounded up.
 
-### Example
+### Response example
 
 ```json
 {

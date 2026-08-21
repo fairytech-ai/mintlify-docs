@@ -132,16 +132,21 @@ momentSDK.setUserId(userId, object: MomentSDK.ResultCallback {
 Moment Public API 를 사용해 테스트 메시지를 전송합니다.
 
 ```bash
-curl -X 'POST' \
-  'https://api.public.moment.fairytech.ai/project/{PROJECT_ID}/device-message/send' \
-  -H 'accept: */*' \
-  -H 'x-moment-api-key: {PUBLIC_API_KEY}' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "userId": "test-user-id",
-  "sdkVersion": "{SDK_VERSION}",
-  "businessName": "gmarket"
-}'
+PROJECT_ID="{PROJECT_ID}"
+PUBLIC_API_KEY="{PUBLIC_API_KEY}"
+USER_ID="{USER_ID}"
+SDK_VERSION="{SDK_VERSION}"
+BUSINESS_NAME="{BUSINESS_NAME}"
+
+curl -X POST \
+  "https://api.public.moment.fairytech.ai/project/${PROJECT_ID}/device-message/send" \
+  -H "x-moment-api-key: ${PUBLIC_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"userId\": \"${USER_ID}\",
+    \"sdkVersion\": \"${SDK_VERSION}\",
+    \"businessName\": \"${BUSINESS_NAME}\"
+  }"
 ```
 
 <Note>

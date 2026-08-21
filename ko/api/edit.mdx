@@ -6,7 +6,15 @@ title: "보정내역 조회  API"
 
 정산 시 확정 실적 조회 API(V2)의 `confirmedAmount`에 더해, 본 API에서 조회한 `adjustmentAmount`를 반영하여 최종 정산 금액을 산출할 수 있습니다.
 
-`GET https://api.public.moment.fairytech.ai/organization/{ORGANIZATION_PUBLIC_ID}/adjustments`
+## 요청
+
+### 엔드포인트
+
+```http
+GET /organization/{ORGANIZATION_PUBLIC_ID}/adjustments
+```
+
+Base URL: `https://api.public.moment.fairytech.ai`
 
 ### 요청 헤더
 
@@ -36,8 +44,17 @@ title: "보정내역 조회  API"
 
 ### 요청 예시
 
-```json
-GET https://api.public.moment.fairytech.ai/organization/{ORGANIZATION_PUBLIC_ID}/adjustments?year=2025&month=3&page=1&limit=20
+```bash
+ORGANIZATION_PUBLIC_ID="{ORGANIZATION_PUBLIC_ID}"
+PUBLIC_API_KEY="{PUBLIC_API_KEY}"
+YEAR="2025"
+MONTH="3"
+PAGE="1"
+LIMIT="20"
+
+curl -X GET \
+  "https://api.public.moment.fairytech.ai/organization/${ORGANIZATION_PUBLIC_ID}/adjustments?year=${YEAR}&month=${MONTH}&page=${PAGE}&limit=${LIMIT}" \
+  -H "x-moment-api-key: ${PUBLIC_API_KEY}"
 ```
 
 ### 응답 데이터
