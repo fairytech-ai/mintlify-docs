@@ -79,6 +79,10 @@ email: [eng@fairytech.ai](mailto:eng@fairytech.ai)
 
 Add **Firebase Messaging** and **Moment SDK (push extension)** to `build.gradle`.
 
+<Note>
+  Replace `{SDK_ARTIFACT_ID}` and `{SDK_VERSION}` with the customer-specific SDK artifact ID and version provided by Fairy.
+</Note>
+
 ```text
 plugins {
 	id("com.google.gms.google-services")
@@ -86,7 +90,7 @@ plugins {
 
 dependencies {
 	implementation("com.google.firebase:firebase-messaging:+")
-	implementation "ai.fairytech:moment-x-push:${LATEST_VERSION}"
+	implementation "ai.fairytech:{SDK_ARTIFACT_ID}:{SDK_VERSION}"
 }
 ```
 
@@ -174,17 +178,22 @@ momentSDK.setUserId(userId, object: MomentSDK.ResultCallback {
 
 - Use the Moment Public API to send a test message.
   - Confirm your projectId and API key and pass them in the headers and params.
-  - `x-moment-api-key` is different from `sdk-api-key`. Use the separately delivered api-key.
+  - Use the Server API Key provided separately from the SDK API Key for `x-moment-api-key`.
 
 ```bash
-curl -X 'POST' \
-  '<https://api.public.moment.fairytech.ai/project/{YOUT_PROJECT_ID}/device-message/send>' \
-  -H 'accept: */*' \
-  -H 'x-moment-api-key: {YOUR_API_KEY}' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "userId": "test-user-id",
-  "sdkVersion": "1.2.3",
-  "businessName": "gmarket"
-}'
+PROJECT_ID="{PROJECT_ID}"
+SERVER_API_KEY="{SERVER_API_KEY}"
+USER_ID="{USER_ID}"
+SDK_VERSION="{SDK_VERSION}"
+BUSINESS_NAME="{BUSINESS_NAME}"
+
+curl -X POST \
+  "https://api.public.moment.fairytech.ai/project/${PROJECT_ID}/device-message/send" \
+  -H "x-moment-api-key: ${SERVER_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"userId\": \"${USER_ID}\",
+    \"sdkVersion\": \"${SDK_VERSION}\",
+    \"businessName\": \"${BUSINESS_NAME}\"
+  }"
 ```

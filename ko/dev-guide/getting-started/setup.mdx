@@ -7,18 +7,26 @@ description: "SDK 연동을 위한 사전 준비 및 설정"
 
 ### 사전 준비
 
-아래 항목을 `eng@fairytech.ai`로 전달해 주시면, 프로젝트 설정 후에 `Project ID`, `SDK API Key`, `Maven Secret Key`를 회신드리도록 하겠습니다.
+아래 항목을 `eng@fairytech.ai`로 전달해 주시면, 프로젝트 설정 후에 고객사에 맞는 SDK 설치값을 회신드립니다.
 
 - 개발용 인증서 SHA-1 키해시 및 앱 패키지명
 - 배포용 인증서 SHA-1 키해시 및 앱 패키지명
 - (FCM 혹은 캐시백 이용시) 푸쉬 알림 설정을 위한 service account key.json
+
+| 플레이스홀더 | 입력할 값 |
+| :-- | :-- |
+| `{SDK_ARTIFACT_ID}` | 연동 구성에 따라 Fairy에서 제공한 SDK artifact ID. 예: `moment-x`, `moment-x-push` |
+| `{SDK_VERSION}` | Fairy에서 제공한 SDK 버전. 예: `2.0.2` |
+| `{MAVEN_SECRET}` | Fairy에서 제공한 Maven Secret Key |
+| `{PROJECT_ID}` | Fairy에서 제공한 프로젝트 식별자 |
+| `{SDK_API_KEY}` | Fairy에서 제공한 Moment SDK 초기화용 API Key |
 
 ### STEP 1) SDK dependency 추가
 
 `settings.gradle` 또는 `build.gradle` 에 MomentSDK를 다운로드 받을 maven repository를 추가해주세요.
 
 <Note>
-  `${MAVEN_SECRET}`에는 사전에 전달드린 Maven Secret Key 값을 넣어 주시면 됩니다.
+  `{MAVEN_SECRET}`에는 사전에 제공한 Maven Secret Key를 입력합니다.
 </Note>
 
 ```kotlin
@@ -26,10 +34,10 @@ description: "SDK 연동을 위한 사전 준비 및 설정"
 repositories {
     maven {
         url "https://asia-northeast3-maven.pkg.dev/moment-prod-16047/moment-x"
-        // TODO: Replace MAVEN_SECRET.
+        // Fairy에서 제공한 Maven Secret Key를 입력합니다.
         credentials {
             username = "_json_key_base64"
-            password = "${MAVEN_SECRET}"
+            password = "{MAVEN_SECRET}"
         }
         authentication {
             basic(BasicAuthentication)
@@ -42,7 +50,7 @@ repositories {
 
 ```kotlin
 dependencies {
-    implementation "ai.fairytech:moment-x:${LATEST_VERSION}"
+    implementation "ai.fairytech:{SDK_ARTIFACT_ID}:{SDK_VERSION}"
 }
 ```
 
@@ -51,17 +59,17 @@ dependencies {
 `AndroidManifest.xml`에 `PROJECT_ID`, `API_KEY`를 추가해주세요.
 
 <Note>
-  `${PROJECT_ID}`, `${SDK_API_KEY}`에는 사전에 전달드린 값을 넣어 주시면 됩니다.
+  `{PROJECT_ID}`, `{SDK_API_KEY}`에는 사전에 제공한 값을 입력합니다.
 </Note>
 
 ```xml
 <application ...>
     <meta-data
         android:name="ai.fairytech.moment.PROJECT_ID"
-        android:value="${PROJECT_ID}" />
+        android:value="{PROJECT_ID}" />
     <meta-data
         android:name="ai.fairytech.moment.API_KEY"
-        android:value="${SDK_API_KEY}" />
+        android:value="{SDK_API_KEY}" />
 </application>
 ```
 

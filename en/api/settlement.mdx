@@ -20,15 +20,17 @@ A typical implementation: **at monthly settlement time (around the 5th–7th), r
 
 ### Endpoint
 
-```json
-GET <https://api.public.moment.fairytech.ai/organization/:organizationPublicId/settled_transactions>
+```http
+GET /organization/{ORGANIZATION_PUBLIC_ID}/settled_transactions
 ```
+
+Base URL: `https://api.public.moment.fairytech.ai`
 
 ### Headers
 
 | Header | Required | Description |
 | :-- | :-- | :-- |
-| x-moment-api-key | O | API server auth key |
+| x-moment-api-key | O | Server API Key provided by Fairy |
 
 ### Path parameters
 
@@ -36,9 +38,7 @@ GET <https://api.public.moment.fairytech.ai/organization/:organizationPublicId/s
 | :-- | :-- | :-- | :-- | :-- |
 | organizationPublicId | string | Host ID | O | - |
 
-\<aside\><br />💡 **Tip:** If you didn't previously receive an organizationPublicId by email,<br />please email [eng@fairytech.ai](mailto:eng@fairytech.ai).
-
-\</aside\>
+Replace `{ORGANIZATION_PUBLIC_ID}` with the customer ID provided by Fairy. If you haven't received it, contact [eng@fairytech.ai](mailto:eng@fairytech.ai).
 
 ### Query string
 
@@ -52,10 +52,19 @@ GET <https://api.public.moment.fairytech.ai/organization/:organizationPublicId/s
 
 If you pass `user_id`, only that user's earnings are returned; in that case the response is by single user, so page and limit are unnecessary.
 
-### Example
+### Request example
 
-```sql
-GET <https://api.public.moment.fairytech.ai/organization/fairy_card/settled_transactions?year=2025&month=11&page=1&limit=20>
+```bash
+ORGANIZATION_PUBLIC_ID="{ORGANIZATION_PUBLIC_ID}"
+SERVER_API_KEY="{SERVER_API_KEY}"
+YEAR="2025"
+MONTH="11"
+PAGE="1"
+LIMIT="20"
+
+curl -X GET \
+  "https://api.public.moment.fairytech.ai/organization/${ORGANIZATION_PUBLIC_ID}/settled_transactions?year=${YEAR}&month=${MONTH}&page=${PAGE}&limit=${LIMIT}" \
+  -H "x-moment-api-key: ${SERVER_API_KEY}"
 ```
 
 ## Response
@@ -77,7 +86,7 @@ GET <https://api.public.moment.fairytech.ai/organization/fairy_card/settled_tran
   - We return commission summed per user (deduplicated) across every transaction in the query range, sorted ascending by userId.
   - `confirmedAmount` is the sum of each of the user's individual commissions rounded up.
 
-### Example
+### Response example
 
 ```json
 {

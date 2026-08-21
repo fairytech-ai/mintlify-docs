@@ -6,19 +6,29 @@ title: "보정내역 조회  API"
 
 정산 시 확정 실적 조회 API(V2)의 `confirmedAmount`에 더해, 본 API에서 조회한 `adjustmentAmount`를 반영하여 최종 정산 금액을 산출할 수 있습니다.
 
-\[GET\] [https://api.public.moment.fairytech.ai/organization](https://api.public.moment.fairytech.ai/organization/`:organizationPublicId`/adjustments)`:organizationPublicId`[/adjustments](https://api.public.moment.fairytech.ai/organization/`:organizationPublicId`/adjustments)
+## 요청
+
+### 엔드포인트
+
+```http
+GET /organization/{ORGANIZATION_PUBLIC_ID}/adjustments
+```
+
+Base URL: `https://api.public.moment.fairytech.ai`
 
 ### 요청 헤더
 
 | 헤더명 | 필수여부 | 설명 |
 | :-- | :-- | :-- |
-| x-moment-api-key | O | API 서버 인증키 |
+| x-moment-api-key | O | Fairy에서 제공한 Server API Key |
 
 ### 요청 경로 파라미터
 
 | 파라미터 | 타입 | 설명 | 필수여부 | 기본값 |
 | :-- | :-- | :-- | :-- | :-- |
 | organizationPublicId | string | 고객사 ID | O | - |
+
+`{ORGANIZATION_PUBLIC_ID}`에는 Fairy에서 제공한 고객사 ID를 입력합니다.
 
 ### 요청 쿼리스트링
 
@@ -34,8 +44,17 @@ title: "보정내역 조회  API"
 
 ### 요청 예시
 
-```json
-GET <https://api.public.moment.fairytech.ai/organization/fairy/adjustments?year=2025&month=3&page=1&limit=20>
+```bash
+ORGANIZATION_PUBLIC_ID="{ORGANIZATION_PUBLIC_ID}"
+SERVER_API_KEY="{SERVER_API_KEY}"
+YEAR="2025"
+MONTH="3"
+PAGE="1"
+LIMIT="20"
+
+curl -X GET \
+  "https://api.public.moment.fairytech.ai/organization/${ORGANIZATION_PUBLIC_ID}/adjustments?year=${YEAR}&month=${MONTH}&page=${PAGE}&limit=${LIMIT}" \
+  -H "x-moment-api-key: ${SERVER_API_KEY}"
 ```
 
 ### 응답 데이터

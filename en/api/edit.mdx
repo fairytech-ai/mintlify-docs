@@ -6,19 +6,29 @@ API to query adjustment amounts (separate from confirmed earnings) that were pai
 
 At settlement time, combine this API's `adjustmentAmount` with the confirmed-earnings V2 API's `confirmedAmount` to compute the final settlement amount.
 
-\[GET\] [https://api.public.moment.fairytech.ai/organization](https://api.public.moment.fairytech.ai/organization/`:organizationPublicId`/adjustments)`:organizationPublicId`[/adjustments](https://api.public.moment.fairytech.ai/organization/`:organizationPublicId`/adjustments)
+## Request
+
+### Endpoint
+
+```http
+GET /organization/{ORGANIZATION_PUBLIC_ID}/adjustments
+```
+
+Base URL: `https://api.public.moment.fairytech.ai`
 
 ### Request headers
 
 | Header | Required | Description |
 | :-- | :-- | :-- |
-| x-moment-api-key | O | API server auth key |
+| x-moment-api-key | O | Server API Key provided by Fairy |
 
 ### Path parameters
 
 | Parameter | Type | Description | Required | Default |
 | :-- | :-- | :-- | :-- | :-- |
 | organizationPublicId | string | Host ID | O | - |
+
+Replace `{ORGANIZATION_PUBLIC_ID}` with the customer ID provided by Fairy.
 
 ### Query string
 
@@ -34,8 +44,17 @@ If you pass `user_id`, only that user's adjustment history is returned.
 
 ### Request example
 
-```json
-GET <https://api.public.moment.fairytech.ai/organization/fairy/adjustments?year=2025&month=3&page=1&limit=20>
+```bash
+ORGANIZATION_PUBLIC_ID="{ORGANIZATION_PUBLIC_ID}"
+SERVER_API_KEY="{SERVER_API_KEY}"
+YEAR="2025"
+MONTH="3"
+PAGE="1"
+LIMIT="20"
+
+curl -X GET \
+  "https://api.public.moment.fairytech.ai/organization/${ORGANIZATION_PUBLIC_ID}/adjustments?year=${YEAR}&month=${MONTH}&page=${PAGE}&limit=${LIMIT}" \
+  -H "x-moment-api-key: ${SERVER_API_KEY}"
 ```
 
 ### Response data
